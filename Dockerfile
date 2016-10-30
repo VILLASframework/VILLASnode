@@ -59,9 +59,10 @@ RUN dnf -y update && \
 	bison \
 	texinfo
 
-# Tools for coverage and profiling
+# Tools for coverage, profiling & tests
 RUN dnf -y update && \
     dnf -y install \
+        jq \
         python-pip && \
     pip install \
         gcovr
