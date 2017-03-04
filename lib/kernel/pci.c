@@ -24,6 +24,7 @@
 #include <dirent.h>
 #include <libgen.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "log.h"
 
