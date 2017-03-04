@@ -2,7 +2,7 @@
  *
  * @file
  * @author Steffen Vogel <stvogel@eonerc.rwth-aachen.de>
- * @copyright 2016, Institute for Automation of Complex Power Systems, EONERC
+ * @copyright 2017, Institute for Automation of Complex Power Systems, EONERC
  * @license GNU Lesser General Public License v2.1
  *
  * VILLASnode - connecting real-time simulation equipment
@@ -22,6 +22,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA 
  *********************************************************************************/
 
+/** @addtogroup fpga Kernel @{ */
+
 #pragma once
 
 #include <netlink/netlink.h>
@@ -40,3 +42,5 @@ struct nl_sock * nl_init();
 
 /** Close and free global netlink socket. */
 void nl_shutdown();
+
+/** @} */
