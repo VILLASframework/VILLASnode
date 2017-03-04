@@ -41,7 +41,6 @@
 
 /* Declarations */
 int fpga_benchmarks(int argc, char *argv[], struct fpga_card *c);
-int fpga_tests(int argc, char *argv[], struct fpga_card *c);
 
 struct cfg cfg;
 
@@ -49,7 +48,6 @@ void usage(char *name)
 {
 	printf("Usage: %s CONFIGFILE CARD CMD [OPTIONS]\n", name);
 	printf("   Commands:\n");
-	printf("      tests      Test functionality of VILLASfpga card\n");
 	printf("      benchmarks Do benchmarks\n\n");
 	printf("   Options:\n");
 	printf("      -d    Set log level\n\n");
@@ -65,15 +63,12 @@ int main(int argc, char *argv[])
 	struct fpga_card *card;
 
 	enum {
-		FPGA_TESTS,
 		FPGA_BENCH
 	} subcommand;
 
 	if (argc < 4)
 		usage(argv[0]);
-	if      (strcmp(argv[3], "tests") == 0)
-		subcommand = FPGA_TESTS;
-	else if (strcmp(argv[3], "benchmarks") == 0)
+	if (strcmp(argv[2], "benchmarks") == 0)
 		subcommand = FPGA_BENCH;
 	else
 		usage(argv[0]);
@@ -111,7 +106,6 @@ int main(int argc, char *argv[])
 
 	/* Start subcommand */
 	switch (subcommand) {
-		case FPGA_TESTS: fpga_tests(argc-optind-1, argv+optind+1, card);      break;
 		case FPGA_BENCH: fpga_benchmarks(argc-optind-1, argv+optind+1, card); break;
 	}
 
