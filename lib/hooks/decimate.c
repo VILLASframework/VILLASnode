@@ -1,4 +1,4 @@
-/** A simple example hook function which can be loaded as a plugin.
+/** Decimate hook.
  *
  * @author Steffen Vogel <stvogel@eonerc.rwth-aachen.de>
  * @copyright 2017, Institute for Automation of Complex Power Systems, EONERC
@@ -21,33 +21,64 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 
-#include <stddef.h>
+/** @addtogroup hooks Hook functions
+ * @{
+ */
 
-#include <villas/hook.h>
-#include <villas/log.h>
-#include <villas/plugin.h>
+#include "hook.h"
+#include "plugin.h"
 
-struct hook;
-struct path;
-struct sample;
-
-static int hook_example(struct hook *h, int when, struct hook_info *j)
+static int hook_decimate(struct hook *h, int when, struct hook_info *j)
 {
-	info("Hello world from example hook!");
+	struct {
+		unsigned ratio;
+		unsigned counter;
+	} *private = hook_storage(h, when, sizeof(*private), NULL, NULL);
+
+	switch (when) {
+		case HOOK_PARSE:
+			if (!h->parameter)
+				error("Missing parameter for hook: '%s'", h->name);
 	
+			private->ratio = strtol(h->parameter, NULL, 10);
+			if (!private->ratio)
+				error("Invalid parameter '%s' for hook 'decimate'", h->parameter);
+		
+			private->counter = 0;
+			break;
+		
+		case HOOK_READ:
+			assert(j->smps);
+		
+			int i, ok;
+			for (i = 0, ok = 0; i < j->cnt; i++) {
+				if (private->counter++ % private->ratio == 0) {
+					struct sample *tmp;
+					
+					tmp = j->smps[ok];
+					j->smps[ok++] = j->smps[i];
+					j->smps[i] = tmp;
+				}
+			}
+
+			return ok;
+	}
+
 	return 0;
 }
 
 static struct plugin p = {
-	.name		= "example",
-	.description	= "This is just a simple example hook",
+	.name		= "decimate",
+	.description	= "Downsamping by integer factor",
 	.type		= PLUGIN_TYPE_HOOK,
 	.hook		= {
 		.priority = 99,
 		.history = 0,
-		.cb	= hook_example,
-		.type	= HOOK_PATH_START
+		.cb	= hook_decimate,
+		.type	= HOOK_STORAGE | HOOK_DESTROY | HOOK_READ
 	}
 };
 
 REGISTER_PLUGIN(&p)
+	
+/** @} */

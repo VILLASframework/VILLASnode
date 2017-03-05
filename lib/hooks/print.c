@@ -1,4 +1,4 @@
-/** Hook-releated functions.
+/** Print hook.
  *
  * @author Steffen Vogel <stvogel@eonerc.rwth-aachen.de>
  * @copyright 2017, Institute for Automation of Complex Power Systems, EONERC
@@ -21,61 +21,36 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 
-#include <string.h>
-#include <math.h>
+/** @addtogroup hooks Hook functions
+ * @{
+ */
 
-#include "timing.h"
-#include "config.h"
-#include "msg.h"
-#include "hooks.h"
-#include "path.h"
-#include "utils.h"
-#include "node.h"
-#include "cfg.h"
+#include "hook.h"
+#include "plugin.h"
+#include "sample.h"
 
-struct list hooks;
-
-struct cfg *cfg = NULL;
-
-void hook_init(struct cfg *c)
+static int hook_print(struct hook *h, int when, struct hook_info *j)
 {
-	cfg = c;
-}
-
-int hooks_sort_priority(const void *a, const void *b) {
-	struct hook *ha = (struct hook *) a;
-	struct hook *hb = (struct hook *) b;
+	assert(j->smps);
 	
-	return ha->priority - hb->priority;
+	for (int i = 0; i < j->cnt; i++)
+		sample_fprint(stdout, j->smps[i], SAMPLE_ALL);
+
+	return j->cnt;
 }
 
-int hook_run(struct path *p, struct sample *smps[], size_t cnt, int when)
-{
-	list_foreach(struct hook *h, &p->hooks) {
-		if (h->type & when) {
-			debug(LOG_HOOK | 22, "Running hook when=%u '%s' prio=%u, cnt=%zu", when, h->name, h->priority, cnt);
-
-			cnt = h->cb(p, h, when, smps, cnt);
-			if (cnt == 0)
-				break;
-		}
+static struct plugin p = {
+	.name		= "print",
+	.description	= "Print the message to stdout",
+	.type		= PLUGIN_TYPE_HOOK,
+	.hook		= {
+		.priority = 99,
+		.history = 0,
+		.cb	= hook_print,
+		.type	= HOOK_READ
 	}
+};
 
-	return cnt;
-}
+REGISTER_PLUGIN(&p)
 
-void * hook_storage(struct hook *h, int when, size_t len)
-{
-	switch (when) {
-		case HOOK_INIT:
-			h->_vd = alloc(len);
-			break;
-			
-		case HOOK_DEINIT:
-			free(h->_vd);
-			h->_vd = NULL;
-			break;
-	}
-	
-	return h->_vd;
-}
+/** @} */

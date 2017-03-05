@@ -28,6 +28,8 @@
 
 #include <stdint.h>
 
+#include "config.h"
+
 //#include <sys/capability.h>
 
 /** Check if current process has capability \p cap.
@@ -35,7 +37,13 @@
  * @retval 0 If capabilty is present.
  * @retval <0 If capability is not present.
  */
-//int kernel_check_cap(cap_value_t cap):
+//int kernel_check_cap(cap_value_t cap);
+
+/** Get number of reserved hugepages. */
+int kernel_get_nr_hugepages();
+
+/** Set number of reserved hugepages. */
+int kernel_set_nr_hugepages(int nr);
 
 /** Get kernel cmdline parameter
  *

@@ -1,4 +1,4 @@
-/** Unit tests for histogram
+/** Timestamp hook.
  *
  * @author Steffen Vogel <stvogel@eonerc.rwth-aachen.de>
  * @copyright 2017, Institute for Automation of Complex Power Systems, EONERC
@@ -21,32 +21,36 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 
-#include <criterion/criterion.h>
+/** @addtogroup hooks Hook functions
+ * @{
+ */
 
-#include "hist.h"
-#include "utils.h"
+#include "hook.h"
+#include "plugin.h"
+#include "timing.h"
 
-const double test_data[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+static int hook_ts(struct hook *h, int when, struct hook_info *j)
+{
+	assert(j->smps);
 
-/* Histogram of test_data with 200 buckets between -100 and 100 */
-const int hist_result[] = {};
+	for (int i = 0; i < j->cnt; i++)
+		j->smps[i]->ts.origin = j->smps[i]->ts.received;
 
-Test(hist, simple) {
-	struct hist h;
-	int ret;
-	
-	ret = hist_create(&h, -100, 100, 1);
-	cr_assert_eq(ret, 0);
-	
-	for (int i = 0; i < ARRAY_LEN(test_data); i++)
-		hist_put(&h, test_data[i]);
-	
-	cr_assert_float_eq(hist_mean(&h), 5.5, 1e-6);
-	cr_assert_float_eq(hist_var(&h), 9.1666, 1e-3,);
-	cr_assert_float_eq(hist_stddev(&h), 3.027650, 1e-6);
-	
-//	for (int i = 0; i < ARRAY_LEN(hist_result); i++)
-//		cr_assert_eq()
-	
-	hist_destroy(&h);
+	return j->cnt;
 }
+
+static struct plugin p = {
+	.name		= "ts",
+	.description	= "Update timestamp of message with current time",
+	.type		= PLUGIN_TYPE_HOOK,
+	.hook		= {
+		.priority = 99,
+		.history = 0,
+		.cb	= hook_ts,
+		.type	= HOOK_READ
+	}
+};
+
+REGISTER_PLUGIN(&p)
+	
+/** @} */

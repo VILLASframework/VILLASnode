@@ -67,7 +67,6 @@ struct api_buffer {
 	char *buf;	/**< A pointer to the buffer. Usually resized via realloc() */
 	size_t size;	/**< The allocated size of the buffer. */
 	size_t len;	/**< The used length of the buffer. */
-	size_t sent;	/**< Pointer to api_buffer::buf to indicate how much has been sent. */
 };
 
 /** A connection via HTTP REST or WebSockets to issue API actions. */
@@ -85,6 +84,8 @@ struct api_session {
 		struct api_buffer body;		/**< HTTP body / WS payload */
 		struct api_buffer headers;	/**< HTTP headers */
 	} response;
+	
+	bool completed;				/**< Did we receive the complete body yet? */
 	
 	struct api *api;
 };
@@ -109,7 +110,7 @@ int api_destroy(struct api *a);
 
 int api_deinit(struct api *a);
 
-int api_session_init(struct api_session *s, enum api_mode m);
+int api_session_init(struct api_session *s, struct api *a, enum api_mode m);
 
 int api_session_destroy(struct api_session *s);
 
