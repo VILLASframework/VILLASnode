@@ -36,6 +36,11 @@ struct pool {
 	void *buffer;		/**< Address of the underlying memory area */
 	const struct memtype *mem;
 	
+	enum {
+		POOL_STATE_DESTROYED,
+		POOL_STATE_INITIALIZED
+	} state;
+	
 	size_t len;		/**< Length of the underlying memory area */
 	
 	size_t blocksz;		/**< Length of a block in bytes */
