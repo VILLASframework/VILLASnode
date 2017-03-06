@@ -35,7 +35,7 @@ int node_type_init(struct node_type *vt, int argc, char *argv[], config_setting_
 {
 	int ret;
 	
-	if (vt->state != NODE_TYPE_UNINITIALIZED)
+	if (vt->state != NODE_TYPE_DEINITIALIZED)
 		return -1;
 
 	info("Initializing " YEL("%s") " node type", vt->name);
@@ -62,7 +62,7 @@ int node_type_deinit(struct node_type *vt)
 	}
 	
 	if (ret == 0)
-		vt->state = NODE_TYPE_UNINITIALIZED;
+		vt->state = NODE_TYPE_DEINITIALIZED;
 
 	return ret;
 }
