@@ -121,8 +121,6 @@ int main(int argc, char *argv[])
 	}
 	else if (argc > 2)
 		usage();
-	
-	char *uri = (argc == 2) ? argv[1] : NULL;
 #endif
 
 	log_init(&cfg.log, V, LOG_ALL);
@@ -140,7 +138,7 @@ int main(int argc, char *argv[])
 	info("Parsing configuration");
 	cfg_init_pre(&cfg);
 	
-	cfg_parse(&cfg, uri);
+	cfg_parse_cli(&cfg, argc, argv);
 
 	cfg_init_post(&cfg);
 
