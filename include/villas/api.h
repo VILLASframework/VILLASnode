@@ -100,8 +100,6 @@ struct api_session {
  * Every command is described by a descriptor.
  */
 struct api_ressource {
-	char *name;
-	char *description;
 	api_cb_t cb;
 };
 

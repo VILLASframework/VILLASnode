@@ -365,7 +365,7 @@ static struct plugin p = {
 		.open		= file_open,
 		.close		= file_close,
 		.read		= file_read,
-		.write		= file_write
+		.write		= file_write,
 	}
 };
 
