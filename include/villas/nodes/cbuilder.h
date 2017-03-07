@@ -38,8 +38,6 @@
 struct cbuilder;
 
 struct cbuilder_model {
-	char *name;
-
 	void (*code)();
 	void (*ram)();
 	
