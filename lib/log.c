@@ -22,6 +22,7 @@
  *********************************************************************************/
 
 #include <stdio.h>
+#include <stdbool.h>
 #include <string.h>
 #include <time.h>
 #include <errno.h>
@@ -48,9 +49,14 @@ static const char *facilities_strs[] = {
 	"config",	/* LOG_CONFIG */
 	"hook",		/* LOG_HOOK */
 	"path",		/* LOG_PATH */
+	"node",		/* LOG_NODE */
 	"mem",		/* LOG_MEM */
 	"web",		/* LOG_WEB */
 	"api",		/* LOG_API */
+	"log",		/* LOG_LOG */
+	"vfio",		/* LOG_VFIO */
+	"pci",		/* LOG_PCI */
+	"xil",		/* LOG_XIL */
 	
 	/* Node-types */	
 	"socket",	/* LOG_SOCKET */
@@ -58,7 +64,7 @@ static const char *facilities_strs[] = {
 	"fpga",		/* LOG_FPGA */
 	"ngsi",		/* LOG_NGSI */
 	"websocket",	/* LOG_WEBSOCKET */
-	"opal"		/* LOG_OPAL */
+	"opal",		/* LOG_OPAL */
 };
 
 #ifdef __GNUC__
@@ -80,40 +86,48 @@ void log_outdent(int *old)
 
 int log_set_facility_expression(struct log *l, const char *expression)
 {
-	char *copy, *facility_str;
+	bool negate;
+	char *copy, *token;
+	long mask = 0, facilities = 0;
 	
-	enum {
-		NORMAL,
-		NEGATE
-	} mode;
-	
-	if (strlen(expression) <= 0)
-		return -1;
-
-	if (expression[0] == '!') {
-		mode = NEGATE;
-		l->facilities = ~0xFF;
-	}
-	else {
-		mode = NORMAL;
-		l->facilities = 0;
-	}
-
 	copy = strdup(expression);
-	facility_str = strtok(copy, ",");
+	token = strtok(copy, ",");
 
-	while (facility_str != NULL) {
-		for (int i = 0; i < ARRAY_LEN(facilities_strs); i++) {
-			if (strcmp(facilities_strs[i], facility_str)) {
-				switch (mode) {
-					case NORMAL: l->facilities |=  (1 << (i+8));
-					case NEGATE: l->facilities &= ~(1 << (i+8));
+	while (token != NULL) {
+		if (token[0] == '!') {
+			token++;
+			negate = true;
+		}
+		else
+			negate = false;
+
+		/* Check for some classes */
+		if      (!strcmp(token, "all"))
+			mask = LOG_ALL;
+		else if (!strcmp(token, "nodes"))
+			mask = LOG_NODES;
+		else if (!strcmp(token, "kernel"))
+			mask = LOG_KERNEL;
+		else {
+			for (int ind = 0; ind < ARRAY_LEN(facilities_strs); ind++) {
+				if (!strcmp(token, facilities_strs[ind])) {
+					mask = (1 << (ind+8));
+					goto found;
 				}
 			}
+			
+			error("Invalid log class '%s'", token);
 		}
-		
-		facility_str = strtok(NULL, ",");
+
+found:		if (negate)
+			facilities &= ~mask;
+		else
+			facilities |= mask;
+
+		token = strtok(NULL, ",");
 	}
+	
+	l->facilities = facilities;
 	
 	free(copy);
 
@@ -129,7 +143,7 @@ int log_init(struct log *l, int level, long facilitites)
 	/* Register this log instance globally */
 	log = l;
 
-	debug(LOG_LOG, "Log sub-system intialized: level=%d, faciltities=%#lx", level, facilitites);
+	debug(LOG_LOG | 5, "Log sub-system intialized: level=%d, faciltities=%#lx", level, facilitites);
 
 	return 0;
 }
@@ -188,11 +202,11 @@ int log_parse(struct log *l, config_setting_t *cfg)
 	const char *facilities;
 	
 	if (!config_setting_is_group(cfg))
-		cerror(cfg, "Setting 'logging' must be a group.");
+		cerror(cfg, "Setting 'log' must be a group.");
 
 	config_setting_lookup_int(cfg, "level", &l->level);
 
-	if (config_setting_lookup_string(cfg, "facilties", &facilities))
+	if (config_setting_lookup_string(cfg, "facilities", &facilities))
 		log_set_facility_expression(l, facilities);
 
 	return 0;
@@ -212,6 +226,8 @@ void debug(long class, const char *fmt, ...)
 	
 	int lvl = class &  0xFF;
 	int fac = class & ~0xFF;
+	
+	assert(log);
 
 	if (((fac == 0) || (fac & log->facilities)) && (lvl <= log->level)) {
 		va_start(ap, fmt);
@@ -223,6 +239,8 @@ void debug(long class, const char *fmt, ...)
 void info(const char *fmt, ...)
 {
 	va_list ap;
+	
+	assert(log);
 
 	va_start(ap, fmt);
 	log_vprint(log, LOG_LVL_INFO, fmt, ap);
@@ -232,6 +250,8 @@ void info(const char *fmt, ...)
 void warn(const char *fmt, ...)
 {
 	va_list ap;
+	
+	assert(log);
 
 	va_start(ap, fmt);
 	log_vprint(log, LOG_LVL_WARN, fmt, ap);
@@ -242,6 +262,8 @@ void stats(const char *fmt, ...)
 {
 	va_list ap;
 
+	assert(log);
+
 	va_start(ap, fmt);
 	log_vprint(log, LOG_LVL_STATS, fmt, ap);
 	va_end(ap);
@@ -250,6 +272,8 @@ void stats(const char *fmt, ...)
 void error(const char *fmt, ...)
 {
 	va_list ap;
+	
+	assert(log);
 
 	va_start(ap, fmt);
 	log_vprint(log, LOG_LVL_ERROR, fmt, ap);
@@ -262,6 +286,8 @@ void serror(const char *fmt, ...)
 {
 	va_list ap;
 	char *buf = NULL;
+
+	assert(log);
 
 	va_start(ap, fmt);
 	vstrcatf(&buf, fmt, ap);
@@ -277,6 +303,8 @@ void cerror(config_setting_t *cfg, const char *fmt, ...)
 {
 	va_list ap;
 	char *buf = NULL;
+
+	assert(log);
 
 	va_start(ap, fmt);
 	vstrcatf(&buf, fmt, ap);
