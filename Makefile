@@ -11,10 +11,25 @@
 # [1] http://aegis.sourceforge.net/auug97.pdf
 #
 # @author Steffen Vogel <stvogel@eonerc.rwth-aachen.de>
-# @copyright 2014-2016, Institute for Automation of Complex Power Systems, EONERC
-#   This file is part of VILLASnode. All Rights Reserved. Proprietary and confidential.
-#   Unauthorized copying of this file, via any medium is strictly prohibited.
-#################################################################################
+# @copyright 2016, Institute for Automation of Complex Power Systems, EONERC
+# @license GNU Lesser General Public License v2.1
+#
+# VILLASnode - connecting real-time simulation equipment
+#
+# This application is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License.
+#
+# This application is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this library; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+###################################################################################
 
 # Project modules
 MODULES = lib plugins src tests thirdparty tools
@@ -37,8 +52,11 @@ LDFLAGS += -L$(BUILDDIR)
 
 ifdef CI
 	CFLAGS += -D_GIT_REV='"${CI_BUILD_REF:0:7}~ci"'
-else ifdef GIT
-	CFLAGS += -D_GIT_REV='"$(shell git rev-parse --short HEAD)"'
+else
+	GIT = $(shell type -p git)
+	ifneq ($(GIT),)
+		CFLAGS += -D_GIT_REV='"$(shell git rev-parse --short HEAD)"'
+	endif
 endif
 
 # We must compile without optimizations for gcov!
