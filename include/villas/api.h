@@ -32,7 +32,7 @@
 /* Forward declarations */
 enum lws_callback_reasons;
 struct lws;
-struct cfg;
+struct super_node;
 
 struct api;
 struct api_ressource;
@@ -63,7 +63,7 @@ struct api {
 	
 	enum state state;
 	
-	struct cfg *cfg;
+	struct super_node *super_node;
 };
 
 struct api_buffer {
@@ -105,7 +105,7 @@ struct api_ressource {
  *
  * Save references to list of paths / nodes for command execution.
  */
-int api_init(struct api *a, struct cfg *cfg);
+int api_init(struct api *a, struct super_node *sn);
 
 int api_destroy(struct api *a);
 
