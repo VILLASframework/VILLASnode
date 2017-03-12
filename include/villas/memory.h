@@ -59,7 +59,7 @@ struct memzone {
 };
 
 /** Initilialize memory subsystem */
-int memory_init();
+int memory_init(int hugepages);
 
 /** Allocate \p len bytes memory of type \p m.
  *
