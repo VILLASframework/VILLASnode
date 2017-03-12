@@ -22,7 +22,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 
-/** @addtogroup fpga VILLASfpga @{ */
+/** @addtogroup fpga VILLASILLASfpga
+ * @{
+ */
 
 #ifndef _FPGA_VLNV_H_
 #define _FPGA_VLNV_H_

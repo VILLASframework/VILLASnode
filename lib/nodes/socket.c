@@ -48,7 +48,7 @@
 #include "plugin.h"
 
 /* Forward declartions */
-static struct node_type vt;
+static struct plugin p;
 
 /* Private static storage */
 struct list interfaces;
@@ -62,7 +62,10 @@ int socket_init(int argc, char * argv[], config_setting_t *cfg)
 	list_init(&interfaces);
 
 	/* Gather list of used network interfaces */
-	list_foreach(struct node *n, &vt.instances) {
+	list_foreach(struct node *n, &p.node.instances) {
+		if (n->state != STATE_INITIALIZED)
+			continue;
+
 		struct socket *s = n->_vd;
 		struct rtnl_link *link;
 
@@ -131,11 +134,12 @@ char * socket_print(struct node *n)
 	
 	if (s->header == SOCKET_HEADER_DEFAULT)
 		endian = "auto";
-	else
+	else {
 		switch (s->endian) {
 			case MSG_ENDIAN_LITTLE:	endian = "little";	break;
 			case MSG_ENDIAN_BIG:	endian = "big";		break;
 		}
+	}
 
 	char *local = socket_print_addr((struct sockaddr *) &s->local);
 	char *remote = socket_print_addr((struct sockaddr *) &s->remote);

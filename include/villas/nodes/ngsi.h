@@ -42,7 +42,7 @@
 #include "list.h"
 #include "config.h"
 #include "msg.h"
-#include "cfg.h"
+#include "super_node.h"
 #include "node.h"
 
 struct node;
