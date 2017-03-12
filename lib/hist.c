@@ -190,12 +190,9 @@ char * hist_dump(struct hist *h)
 #ifdef WITH_JANSSON
 json_t * hist_json(struct hist *h)
 {
-	json_t *b = json_array();
-	
-	for (int i = 0; i < h->length; i++)
-		json_array_append(b, json_integer(h->data[i]));
-	
-	return json_pack("{ s: f, s: f, s: i, s: i, s: i, s: f, s: f, s: f, s: f, s: f, s: o }",
+	json_t *json_buckets, *json_hist;
+
+	json_hist = json_pack("{ s: f, s: f, s: i, s: i, s: i, s: f, s: f, s: f, s: f, s: f }",
 		"low", h->low,
 		"high", h->high,
 		"total", h->total,
@@ -205,9 +202,19 @@ json_t * hist_json(struct hist *h)
 		"lowest", h->lowest,
 		"mean", hist_mean(h),
 		"variance", hist_var(h),
-		"stddev", hist_stddev(h),
-		"buckets", b
+		"stddev", hist_stddev(h)
 	);
+
+	if (h->total - h->lower - h->higher > 0) {
+		json_buckets = json_array();
+
+		for (int i = 0; i < h->length; i++)
+			json_array_append(json_buckets, json_integer(h->data[i]));
+		
+		json_object_set(json_hist, "buckets", json_buckets);
+	}
+
+	return json_hist;
 }
 
 int hist_dump_json(struct hist *h, FILE *f)
@@ -224,9 +231,7 @@ int hist_dump_json(struct hist *h, FILE *f)
 
 int hist_dump_matlab(struct hist *h, FILE *f)
 {
-	char *buf = hist_dump(h);
-
-	fprintf(f, "%lu = struct( ", time(NULL));
+	fprintf(f, "struct(");
 	fprintf(f, "'low', %f, ", h->low);
 	fprintf(f, "'high', %f, ", h->high);
 	fprintf(f, "'total', %ju, ", h->total);
@@ -237,10 +242,16 @@ int hist_dump_matlab(struct hist *h, FILE *f)
 	fprintf(f, "'mean', %f, ", hist_mean(h));
 	fprintf(f, "'variance', %f, ", hist_var(h));
 	fprintf(f, "'stddev', %f, ", hist_stddev(h));
-	fprintf(f, "'buckets', %s ", buf);
-	fprintf(f, "),\n");
 	
-	free(buf);
+	if (h->total - h->lower - h->higher > 0) {
+		char *buf = hist_dump(h);
+		fprintf(f, "'buckets', %s", buf);
+		free(buf);
+	}
+	else
+		fprintf(f, "'buckets', zeros(1, %d)", h->length);
+
+	fprintf(f, ")");
 	
 	return 0;
 }
