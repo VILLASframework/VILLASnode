@@ -585,7 +585,8 @@ static struct plugin p = {
 		.read		= ngsi_read,
 		.write		= ngsi_write,
 		.init		= ngsi_init,
-		.deinit		= ngsi_deinit
+		.deinit		= ngsi_deinit,
+		.instances	= LIST_INIT()
 	}
 };
 
