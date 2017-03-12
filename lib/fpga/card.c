@@ -24,6 +24,9 @@
 #include <unistd.h>
 
 #include "config.h"
+#include "log.h"
+#include "list.h"
+#include "utils.h"
 
 #include "kernel/pci.h"
 #include "kernel/vfio.h"
@@ -39,7 +42,7 @@ int fpga_card_init(struct fpga_card *c, struct pci *pci, struct vfio_container *
 
 	fpga_card_check(c);
 	
-	if (c->state == FPGA_CARD_STATE_INITIALIZED)
+	if (c->state == STATE_INITIALIZED)
 		return 0;
 
 	/* Search for FPGA card */
@@ -95,8 +98,7 @@ int fpga_card_parse(struct fpga_card *c, config_setting_t *cfg)
 	c->filter.id.device = FPGA_PCI_PID_VFPGA;
 	
 	c->name = config_setting_name(cfg);
-	c->state = FPGA_CARD_STATE_UNKOWN;
-	
+
 	if (!config_setting_lookup_int(cfg, "affinity", &c->affinity))
 		c->affinity = 0;
 
@@ -146,6 +148,7 @@ int fpga_card_parse(struct fpga_card *c, config_setting_t *cfg)
 	}
 	
 	c->cfg = cfg;
+	c->state = STATE_PARSED;
 	
 	return 0;
 }
@@ -221,7 +224,7 @@ int fpga_card_reset(struct fpga_card *c)
 	if (rst_reg[0])
 		return -2;
 	
-	c->state = FPGA_CARD_STATE_RESETTED;
+	c->state = STATE_INITIALIZED;
 
 	return 0;
 }

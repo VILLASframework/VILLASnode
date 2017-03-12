@@ -30,6 +30,7 @@
 #include <libconfig.h>
 
 #include "list.h"
+#include "common.h"
 
 /* Forward declarations */
 struct node;
@@ -42,10 +43,7 @@ struct node_type {
 	struct list instances;		/**< A list of all existing nodes of this type. */
 	size_t size;			/**< Size of private data bock. @see node::_vd */
 	
-	enum node_type_state {
-		NODE_TYPE_DEINITIALIZED = 0,
-		NODE_TYPE_INITIALIZED
-	} state;
+	enum state state;
 	
 	/** Global initialization per node type.
 	 *

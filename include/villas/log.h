@@ -25,9 +25,10 @@
 #pragma once
 
 #include <stdarg.h>
+#include <time.h>
 #include <libconfig.h>
 
-#include "utils.h"
+#include "common.h"
 
 #ifdef __GNUC__
   #define INDENT	int __attribute__ ((__cleanup__(log_outdent), unused)) _old_indent = log_indent(1);
@@ -76,6 +77,8 @@ enum log_facilities {
 };
 
 struct log {
+	enum state state;
+	
 	struct timespec epoch;	/**< A global clock used to prefix the log messages. */
 
 	/** Debug level used by the debug() macro.
@@ -90,7 +93,9 @@ struct log {
 /** Initialize log object */
 int log_init(struct log *l, int level, long faciltities);
 
-int log_deinit(struct log *l);
+int log_start(struct log *l);
+
+int log_stop(struct log *l);
 
 /** Destroy log object */
 int log_destroy(struct log *l);

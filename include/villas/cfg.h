@@ -34,6 +34,7 @@
 #include "api.h"
 #include "web.h"
 #include "log.h"
+#include "common.h"
 
 /** Global configuration */
 struct cfg {
@@ -54,6 +55,8 @@ struct cfg {
 		int argc;
 		char **argv;
 	} cli;
+	
+	enum state state;
 
 	config_t cfg;		/**< Pointer to configuration file */
 	json_t *json;		/**< JSON representation of the same config. */
@@ -65,12 +68,12 @@ struct cfg {
 #endif
 
 /** Inititalize configuration object before parsing the configuration. */
-int cfg_init_pre(struct cfg *cfg);
+int cfg_init(struct cfg *cfg);
 
 /** Initialize after parsing the configuration file. */
-int cfg_init_post(struct cfg *cfg);
+int cfg_start(struct cfg *cfg);
 
-int cfg_deinit(struct cfg *cfg);
+int cfg_stop(struct cfg *cfg);
 
 /** Desctroy configuration object. */
 int cfg_destroy(struct cfg *cfg);

@@ -26,6 +26,8 @@
 
 #include "hook.h"
 #include "api.h"
+#include "common.h"
+#include "utils.h"
 
 #include "fpga/ip.h"
 
@@ -49,12 +51,6 @@ enum plugin_type {
 	PLUGIN_TYPE_MODEL_CBUILDER
 };
 
-enum plugin_state {
-	PLUGIN_STATE_DESTROYED,
-	PLUGIN_STATE_UNLOADED,
-	PLUGIN_STATE_LOADED
-};
-
 struct plugin {
 	char *name;
 	char *description;
@@ -62,7 +58,8 @@ struct plugin {
 	char *path;
 	
 	enum plugin_type type;
-	enum plugin_state state;
+
+	enum state state;
 	
 	int (*load)(struct plugin *p);
 	int (*unload)(struct plugin *p);
