@@ -195,7 +195,7 @@ char * file_print(struct node *n)
 	return buf;
 }
 
-int file_open(struct node *n)
+int file_start(struct node *n)
 {
 	struct file *f = n->_vd;
 	
@@ -265,7 +265,7 @@ int file_open(struct node *n)
 	return 0;
 }
 
-int file_close(struct node *n)
+int file_stop(struct node *n)
 {
 	struct file *f = n->_vd;
 	
@@ -362,8 +362,8 @@ static struct plugin p = {
 		.reverse	= file_reverse,
 		.parse		= file_parse,
 		.print		= file_print,
-		.open		= file_open,
-		.close		= file_close,
+		.start		= file_start,
+		.stop		= file_stop,
 		.read		= file_read,
 		.write		= file_write,
 	}

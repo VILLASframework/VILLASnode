@@ -144,7 +144,7 @@ char * socket_print(struct node *n)
 	return buf;
 }
 
-int socket_open(struct node *n)
+int socket_start(struct node *n)
 {
 	struct socket *s = n->_vd;
 	struct sockaddr_in *sin = (struct sockaddr_in *) &s->local;
@@ -213,7 +213,7 @@ int socket_reverse(struct node *n)
 	return 0;
 }
 
-int socket_close(struct node *n)
+int socket_stop(struct node *n)
 {
 	struct socket *s = n->_vd;
 
@@ -697,8 +697,8 @@ static struct plugin p = {
 		.reverse	= socket_reverse,
 		.parse		= socket_parse,
 		.print		= socket_print,
-		.open		= socket_open,
-		.close		= socket_close,
+		.start		= socket_start,
+		.stop		= socket_stop,
 		.read		= socket_read,
 		.write		= socket_write,
 		.init		= socket_init,
