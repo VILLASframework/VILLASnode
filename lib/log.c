@@ -114,8 +114,7 @@ int log_start(struct log *l)
 
 int log_stop(struct log *l)
 {
-	if (l->state != STATE_STARTED)
-		return -1;
+	assert(l->state == STATE_STARTED);
 	
 	l->state = STATE_STOPPED;
 	
@@ -124,8 +123,7 @@ int log_stop(struct log *l)
 
 int log_destroy(struct log *l)
 {
-	if (l->state == STATE_STARTED)
-		return -1;
+	assert(l->state != STATE_STARTED);
 	
 	l->state = STATE_DESTROYED;
 	
@@ -249,7 +247,7 @@ void debug(long class, const char *fmt, ...)
 	int lvl = class &  0xFF;
 	int fac = class & ~0xFF;
 	
-	assert(log);
+	assert(log != NULL);
 
 	if (((fac == 0) || (fac & log->facilities)) && (lvl <= log->level)) {
 		va_start(ap, fmt);
@@ -262,7 +260,7 @@ void info(const char *fmt, ...)
 {
 	va_list ap;
 	
-	assert(log);
+	assert(log != NULL);
 
 	va_start(ap, fmt);
 	log_vprint(log, LOG_LVL_INFO, fmt, ap);
@@ -273,7 +271,7 @@ void warn(const char *fmt, ...)
 {
 	va_list ap;
 	
-	assert(log);
+	assert(log != NULL);
 
 	va_start(ap, fmt);
 	log_vprint(log, LOG_LVL_WARN, fmt, ap);
@@ -284,7 +282,7 @@ void stats(const char *fmt, ...)
 {
 	va_list ap;
 
-	assert(log);
+	assert(log != NULL);
 
 	va_start(ap, fmt);
 	log_vprint(log, LOG_LVL_STATS, fmt, ap);
@@ -295,7 +293,7 @@ void error(const char *fmt, ...)
 {
 	va_list ap;
 	
-	assert(log);
+	assert(log != NULL);
 
 	va_start(ap, fmt);
 	log_vprint(log, LOG_LVL_ERROR, fmt, ap);
@@ -309,7 +307,7 @@ void serror(const char *fmt, ...)
 	va_list ap;
 	char *buf = NULL;
 
-	assert(log);
+	assert(log != NULL);
 
 	va_start(ap, fmt);
 	vstrcatf(&buf, fmt, ap);
@@ -326,7 +324,7 @@ void cerror(config_setting_t *cfg, const char *fmt, ...)
 	va_list ap;
 	char *buf = NULL;
 
-	assert(log);
+	assert(log != NULL);
 
 	va_start(ap, fmt);
 	vstrcatf(&buf, fmt, ap);

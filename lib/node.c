@@ -32,8 +32,7 @@
 
 int node_init(struct node *n)
 {
-	if (n->state != STATE_DESTROYED)
-		return -1;
+	assert(n->state == STATE_DESTROYED);
 	
 	n->state = STATE_INITIALIZED;
 
@@ -71,8 +70,7 @@ int node_parse(struct node *n, config_setting_t *cfg)
 
 int node_check(struct node *n)
 {
-	if (n->state != STATE_INITIALIZED || n->state != STATE_PARSED)
-		return -1;
+	assert(n->state != STATE_DESTROYED);
 
 	if (n->vectorize <= 0)
 		error("Invalid `vectorize` value %d for node %s. Must be natural number!", n->vectorize, node_name(n));
@@ -90,8 +88,7 @@ int node_start(struct node *n)
 {
 	int ret;
 	
-	if (n->state != STATE_CHECKED)
-		return -1;
+	assert(n->state == STATE_CHECKED);
 
 	info("Starting node %s", node_name_long(n));
 	{ INDENT
@@ -110,8 +107,7 @@ int node_stop(struct node *n)
 {
 	int ret;
 
-	if (n->state != STATE_STARTED)
-		return -1;
+	assert(n->state == STATE_STARTED);
 
 	info("Stopping node %s", node_name(n));
 	{ INDENT
@@ -126,8 +122,7 @@ int node_stop(struct node *n)
 
 int node_destroy(struct node *n)
 {
-	if (n->state == STATE_STARTED)
-		return -1;
+	assert(n->state != STATE_DESTROYED && n->state != STATE_STARTED);
 
 	if (n->_vt->destroy)
 		n->_vt->destroy(n);
