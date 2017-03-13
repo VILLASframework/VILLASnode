@@ -25,6 +25,7 @@
 #include <criterion/parameterized.h>
 
 #include "log.h"
+#include "utils.h"
 
 struct param {
 	char *expression;
