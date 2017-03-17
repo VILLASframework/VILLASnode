@@ -28,7 +28,7 @@
 #include "hook.h"
 #include "plugin.h"
 
-static int hook_convert(struct hook *h, int when, struct hook_info *k)
+static int hook_convert(struct hook *h, int when, struct hook_info *j)
 {
 	struct {
 		enum {
@@ -40,7 +40,7 @@ static int hook_convert(struct hook *h, int when, struct hook_info *k)
 	switch (when) {
 		case HOOK_PARSE:
 			if (!h->parameter)
-				error("Missing parameter for hook: '%s'", plugin_name(h));
+				error("Missing parameter for hook: '%s'", plugin_name(h->_vt));
 
 			if      (!strcmp(h->parameter, "fixed"))
 				private->mode = TO_FIXED;
@@ -51,16 +51,16 @@ static int hook_convert(struct hook *h, int when, struct hook_info *k)
 			break;
 		
 		case HOOK_READ:
-			for (int i = 0; i < k->cnt; i++) {
-				for (int j = 0; j < k->smps[i]->length; j++) {
+			for (int i = 0; i < j->count; i++) {
+				for (int k = 0; k < j->samples[i]->length; k++) {
 					switch (private->mode) {
-						case TO_FIXED: k->smps[i]->data[j].i = k->smps[i]->data[j].f * 1e3; break;
-						case TO_FLOAT: k->smps[i]->data[j].f = k->smps[i]->data[j].i; break;
+						case TO_FIXED: j->samples[i]->data[k].i = j->samples[i]->data[k].f * 1e3; break;
+						case TO_FLOAT: j->samples[i]->data[k].f = j->samples[i]->data[k].i; break;
 					}
 				}
 			}
 			
-			return k->cnt;
+			return j->count;
 	}
 
 	return 0;
@@ -73,7 +73,7 @@ static struct plugin p = {
 	.hook		= {
 		.priority = 99,
 		.cb	= hook_convert,
-		.type	= HOOK_STORAGE | HOOK_READ
+		.when	= HOOK_STORAGE | HOOK_READ
 	}
 };
 
