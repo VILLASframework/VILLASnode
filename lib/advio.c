@@ -167,6 +167,7 @@ int aupload(AFILE *af)
 	fseek(af->file, 0, SEEK_SET);
 
 	res = curl_easy_perform(af->curl);
+	printf("\n"); /* do not continue in the same line as the progress bar */
 	
 	fseek(af->file, pos, SEEK_SET); /* Restore old stream pointer */
 	
@@ -186,6 +187,7 @@ int adownload(AFILE *af)
 	rewind(af->file);
 
 	res = curl_easy_perform(af->curl);
+	printf("\n"); /* do not continue in the same line as the progress bar */
 	switch (res) {
 		case CURLE_OK:
 			curl_easy_getinfo(af->curl, CURLINFO_RESPONSE_CODE, &code);
