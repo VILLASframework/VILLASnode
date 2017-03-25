@@ -36,7 +36,7 @@
 #include "fpga/card.h"
 #include "fpga/ips/intc.h"
 
-int intc_init(struct fpga_ip *c)
+int intc_start(struct fpga_ip *c)
 {
 	int ret;
 
@@ -174,7 +174,7 @@ static struct plugin p = {
 	.ip		= {
 		.vlnv	= { "acs.eonerc.rwth-aachen.de", "user", "axi_pcie_intc", NULL },
 		.type	= FPGA_IP_TYPE_MISC,
-		.init	= intc_init,
+		.start	= intc_start,
 		.destroy = intc_destroy,
 		.size	= sizeof(struct intc)
 	}
