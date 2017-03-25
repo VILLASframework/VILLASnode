@@ -74,7 +74,9 @@ static void path_read(struct path *p)
 		stats_update(p->stats->delta, STATS_SKIPPED, recv - enqueue);
 	}
 
-	list_foreach(struct path_destination *pd, &p->destinations) {
+	for (size_t i = 0; i < list_length(&p->destinations); i++) {
+		struct path_destination *pd = list_at(&p->destinations, i);
+	
 		enqueued = queue_push_many(&pd->queue, (void **) smps, enqueue);
 		if (enqueue != enqueued)
 			warn("Queue overrun for path %s", path_name(p));
@@ -88,7 +90,9 @@ static void path_read(struct path *p)
 
 static void path_write(struct path *p)
 {
-	list_foreach(struct path_destination *pd, &p->destinations) {
+	for (size_t i = 0; i < list_length(&p->destinations); i++) {
+		struct path_destination *pd = list_at(&p->destinations, i);
+	
 		int cnt = pd->node->vectorize;
 		int sent;
 		int tosend;
@@ -234,14 +238,13 @@ int path_parse(struct path *p, config_setting_t *cfg, struct list *nodes)
 	p->source->node = source;
 	p->source->samplelen = samplelen;
 
-	list_foreach(struct node *n, &destinations) {
-		if (n->_vt->write == NULL)
-			cerror(cfg_out, "Output node '%s' is not supported as a destination.", node_name(n));
-		
-		struct path_destination pd;
-		
-		pd.node = n;
-		pd.queuelen = queuelen;
+	for (size_t i = 0; i < list_length(&destinations); i++) {
+		struct node *n = list_at(&destinations, i);
+
+		struct path_destination pd = {
+			.node = n,
+			.queuelen = p->queuelen
+		};
 		
 		list_push(&p->destinations, memdup(&pd, sizeof(pd)));
 	}
@@ -255,7 +258,9 @@ int path_check(struct path *p)
 {
 	assert(p->state != STATE_DESTROYED);
 	
-	list_foreach(struct node *n, &p->destinations) {
+	for (size_t i = 0; i < list_length(&p->destinations); i++) {
+		struct node *n = list_at(&p->destinations, i);
+		
 		if (!n->_vt->write)
 			error("Destiation node '%s' is not supported as a sink for path '%s'", node_name(n), path_name(p));
 	}
@@ -273,7 +278,9 @@ int path_init2(struct path *p)
 	assert(p->state == STATE_CHECKED);
 
 	/* Add internal hooks if they are not already in the list*/
-	list_foreach(struct plugin *q, &plugins) {
+	for (size_t i = 0; i < list_length(&plugins); i++) {
+		struct plugin *q = list_at(&plugins, i);
+		
 		if (q->type == PLUGIN_TYPE_HOOK) {
 			struct hook h;
 			struct hook_type *vt = &q->hook;
@@ -290,7 +297,9 @@ int path_init2(struct path *p)
 	list_sort(&p->hooks, hook_cmp_priority);
 
 	/* Initialize destinations */
-	list_foreach(struct path_destination *pd, &p->destinations) {
+	for (size_t i = 0; i < list_length(&p->destinations); i++) {
+		struct path_destination *pd = list_at(&p->destinations, i);
+
 		ret = queue_init(&pd->queue, pd->queuelen, &memtype_hugepage);
 		if (ret)
 			error("Failed to initialize queue for path");
@@ -315,8 +324,9 @@ int path_start(struct path *p)
 
 	info("Starting path: %s (#hooks=%zu)", path_name(p), list_length(&p->hooks));
 
-	list_foreach(struct hook *h, &p->hooks) {
-		ret = hook_run(h, HOOK_PATH_START, &(struct hook_info) { .path = p });
+	for (size_t i = 0; i < list_length(&p->hooks); i++) {
+		struct hook *h = list_at(&p->hooks, i);
+
 		if (ret)
 			return ret;
 	}
@@ -341,8 +351,10 @@ int path_stop(struct path *p)
 	pthread_cancel(p->tid);
 	pthread_join(p->tid, NULL);
 
-	list_foreach(struct hook *h, &p->hooks) {
-		ret = hook_run(h, HOOK_PATH_STOP, &(struct hook_info) { .path = p });
+	for (size_t i = 0; i < list_length(&p->hooks); i++) {
+		struct hook *h = list_at(&p->hooks, i);
+
+		ret = hook_run(h, HOOK_STOP, NULL, 0);
 		if (ret)
 			return ret;
 	}
@@ -383,8 +395,11 @@ const char * path_name(struct path *p)
 		else {
 			strcatf(&p->_name, "%s " MAG("=>") " [", node_name_short(p->source->node));
 			
-			list_foreach(struct path_destination *pd, &p->destinations)
+			for (size_t i = 0; i < list_length(&p->destinations); i++) {
+				struct path_destination *pd = list_at(&p->destinations, i);
+
 				strcatf(&p->_name, " %s", node_name_short(pd->node));
+			}
 			
 			strcatf(&p->_name, " ]");
 		}
@@ -394,7 +409,9 @@ const char * path_name(struct path *p)
 }
 
 int path_uses_node(struct path *p, struct node *n) {
-	list_foreach(struct path_destination *pd, &p->destinations) {
+	for (size_t i = 0; i < list_length(&p->destinations); i++) {
+		struct path_destination *pd = list_at(&p->destinations, i);
+
 		if (pd->node == n)
 			return 0;
 	}
@@ -429,10 +446,11 @@ int path_reverse(struct path *p, struct path *r)
 	
 	r->source = ps;
 
-	list_foreach(struct hook *h, &p->hooks) {
+	for (size_t i = 0; i < list_length(&p->hooks); i++) {
+		struct hook *h = list_at(&p->hooks, i);
 		struct hook hc;
 		
-		ret = hook_init(&hc, h->_vt, p->super_node);
+		ret = hook_init(&hc, h->_vt, p);
 		if (ret)
 			return ret;
 		
@@ -451,12 +469,14 @@ int path_run_hooks(struct path *p, int when, struct sample *smps[], size_t cnt)
 		.count = cnt
 	};
 
-	list_foreach(struct hook *h, &p->hooks) {
-		ret = hook_run(h, when, &i);
 		if (ret)
 			break;
 		
 		if (i.count == 0)
+	for (size_t i = 0; i < list_length(&p->hooks); i++) {
+		struct hook *h = list_at(&p->hooks, i);
+
+		ret = hook_run(h, when, smps, &cnt);
 			break;
 	}
 
