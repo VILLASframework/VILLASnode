@@ -31,7 +31,7 @@
 
 int dft_parse(struct fpga_ip *c)
 {
-	struct dft *dft = &c->dft;
+	struct dft *dft = (struct dft *) &c->_vd;
 
 	config_setting_t *cfg_harms;
 	
@@ -65,7 +65,7 @@ int dft_init(struct fpga_ip *c)
 	int ret;
 	
 	struct fpga_card *f = c->card;
-	struct dft *dft = &c->dft;
+	struct dft *dft = (struct dft *) &c->_vd;
 
 	XHls_dft *xdft = &dft->inst;
 	XHls_dft_Config xdft_cfg = {
@@ -95,7 +95,8 @@ int dft_init(struct fpga_ip *c)
 
 int dft_destroy(struct fpga_ip *c)
 {
-	struct dft *dft = &c->dft;
+	struct dft *dft = (struct dft *) &c->_vd;
+
 	XHls_dft *xdft = &dft->inst;
 
 	XHls_dft_DisableAutoRestart(xdft);
@@ -117,7 +118,8 @@ static struct plugin p = {
 		.type	= FPGA_IP_TYPE_MATH,
 		.init	= dft_init,
 		.destroy = dft_destroy,
-		.parse	= dft_parse
+		.parse	= dft_parse,
+		.size	= sizeof(struct dft)
 	}
 };
 
