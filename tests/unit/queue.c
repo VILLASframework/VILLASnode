@@ -38,7 +38,7 @@
 
 #define SIZE	(1 << 10)
 
-static struct queue q;
+static struct queue q = { .state = STATE_DESTROYED };
 
 struct param {
 	int volatile start;
@@ -78,7 +78,7 @@ __attribute__((always_inline)) static inline void nop()
 static void * producer(void *ctx)
 {
 	int ret;
-	struct param *p = (struct param *) ctx;
+	struct param *p = ctx;
 	
 	srand((unsigned) time(0) + thread_get_id());
 	size_t nops = rand() % 1000;
@@ -114,7 +114,7 @@ static void * producer(void *ctx)
 static void * consumer(void *ctx)
 {
 	int ret;
-	struct param *p = (struct param *) ctx;
+	struct param *p = ctx;
 	
 	srand((unsigned) time(0) + thread_get_id());
 	size_t nops = rand() % 1000;
@@ -153,7 +153,7 @@ static void * consumer(void *ctx)
 
 void * producer_consumer(void *ctx)
 {
-	struct param *p = (struct param *) ctx;
+	struct param *p = ctx;
 
 	srand((unsigned) time(0) + thread_get_id());
 	size_t nops = rand() % 1000;
@@ -185,7 +185,7 @@ void * producer_consumer(void *ctx)
 
 void * producer_consumer_many(void *ctx)
 {
-	struct param *p = (struct param *) ctx;
+	struct param *p = ctx;
 
 	srand((unsigned) time(0) + thread_get_id());
 	size_t nops = rand() % 1000;
@@ -301,7 +301,7 @@ ParameterizedTest(struct param *p, queue, multi_threaded, .timeout = 10)
 	uint64_t start_tsc_time, end_tsc_time;
 	
 	for (int i = 0; i < p->thread_count; ++i)
-		pthread_create(&threads[i], NULL, p->thread_func, &p);
+		pthread_create(&threads[i], NULL, p->thread_func, p);
 
 	sleep(1);
 
@@ -317,18 +317,19 @@ ParameterizedTest(struct param *p, queue, multi_threaded, .timeout = 10)
 	if (cycpop < 400)
 		cr_log_info("cycles/op: %u\n", cycpop);
 	else
-		cr_log_warn("cycles/op are very high (%u). Are you running on a a hypervisor?\n", cycpop);
+		cr_log_warn("cycles/op are very high (%u). Are you running on a hypervisor?\n", cycpop);
 
-	cr_assert_eq(queue_available(&q), 0);
+	ret = queue_available(&q);
+	cr_assert_eq(ret, 0);
 	
 	ret = queue_destroy(&p->queue);
-	cr_assert_eq(ret, 0, "Failed to create queue");
+	cr_assert_eq(ret, 0, "Failed to destroy queue");
 }
 
 Test(queue, init_destroy)
 {
 	int ret;
-	struct queue q;
+	struct queue q = { .state = STATE_DESTROYED };
 	
 	ret = queue_init(&q, 1024, &memtype_heap);
 	cr_assert_eq(ret, 0); /* Should succeed */
