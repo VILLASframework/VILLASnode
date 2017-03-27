@@ -1,4 +1,4 @@
-/** Convert hook.
+/** Shift sequence number of samples
  *
  * @author Steffen Vogel <stvogel@eonerc.rwth-aachen.de>
  * @copyright 2017, Institute for Automation of Complex Power Systems, EONERC
@@ -28,57 +28,39 @@
 #include "hook.h"
 #include "plugin.h"
 
-struct convert {
-	enum {
-		TO_FIXED,
-		TO_FLOAT
-	} mode;
+struct shift {
+	int offset;
 };
 
-static int convert_parse(struct hook *h, config_setting_t *cfg)
+static int shift_seq_parse(struct hook *h, config_setting_t *cfg)
 {
-	struct convert *p = h->_vd;
+	struct shift *p = h->_vd;
 	
-	const char *mode;
-	
-	if (!config_setting_lookup_string(cfg, "mode", &mode))
-		cerror(cfg, "Missing setting 'mode' for hook '%s'", plugin_name(h->_vt));
-	
-	if      (!strcmp(mode, "fixed"))
-		p->mode = TO_FIXED;
-	else if (!strcmp(mode, "float"))
-		p->mode = TO_FLOAT;
-	else
-		error("Invalid parameter '%s' for hook 'convert'", mode);
+	if (!config_setting_lookup_int(cfg, "offset", &p->offset))
+		cerror(cfg, "Missing setting 'offset' for hook '%s'", plugin_name(h->_vt));
 	
 	return 0;
 }
 
-static int convert_read(struct hook *h, struct sample *smps[], size_t *cnt)
+static int shift_seq_read(struct hook *h, struct sample *smps[], size_t *cnt)
 {
-	struct convert *p = h->_vd;
+	struct shift *p = h->_vd;
 
-	for (int i = 0; i < *cnt; i++) {
-		for (int k = 0; k < smps[i]->length; k++) {
-			switch (p->mode) {
-				case TO_FIXED: smps[i]->data[k].i = smps[i]->data[k].f * 1e3; break;
-				case TO_FLOAT: smps[i]->data[k].f = smps[i]->data[k].i; break;
-			}
-		}
-	}
+	for (int i = 0; i < *cnt; i++)
+		smps[i]->sequence += p->offset;
 
 	return 0;
 }
 
 static struct plugin p = {
-	.name		= "convert",
-	.description	= "Convert message from / to floating-point / integer",
+	.name		= "shift_seq",
+	.description	= "Shift sequence number of samples",
 	.type		= PLUGIN_TYPE_HOOK,
 	.hook		= {
 		.priority = 99,
-		.parse	= convert_parse,
-		.read	= convert_read,
-		.size	= sizeof(struct convert)
+		.parse	= shift_seq_parse,
+		.read	= shift_seq_read,
+		.size	= sizeof(struct shift),
 	}
 };
 
