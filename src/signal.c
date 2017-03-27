@@ -31,6 +31,7 @@
 
 #include <villas/utils.h>
 #include <villas/sample.h>
+#include <villas/sample_io.h>
 #include <villas/timing.h>
 
 #include "config.h"
@@ -193,7 +194,7 @@ check:		if (optarg == endptr)
 			}
 		}
 			
-		sample_fprint(stdout, s, SAMPLE_ALL & ~SAMPLE_OFFSET);
+		sample_io_villas_fprint(stdout, s, SAMPLE_IO_ALL & ~SAMPLE_IO_OFFSET);
 		fflush(stdout);
 		
 		/* Throttle output if desired */
