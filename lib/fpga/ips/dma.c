@@ -117,7 +117,7 @@ int dma_ping_pong(struct fpga_ip *c, char *src, char *dst, size_t len)
 
 int dma_write(struct fpga_ip *c, char *buf, size_t len)
 {
-	struct dma *dma = (struct dma *) &c->_vd;
+	struct dma *dma = c->_vd;
 
 	XAxiDma *xdma = &dma->inst;
 
@@ -130,7 +130,7 @@ int dma_write(struct fpga_ip *c, char *buf, size_t len)
 
 int dma_read(struct fpga_ip *c, char *buf, size_t len)
 {
-	struct dma *dma = (struct dma *) &c->_vd;
+	struct dma *dma = c->_vd;
 
 	XAxiDma *xdma = &dma->inst;
 	
@@ -143,7 +143,7 @@ int dma_read(struct fpga_ip *c, char *buf, size_t len)
 
 int dma_read_complete(struct fpga_ip *c, char **buf, size_t *len)
 {
-	struct dma *dma = (struct dma *) &c->_vd;
+	struct dma *dma = c->_vd;
 
 	XAxiDma *xdma = &dma->inst;
 
@@ -156,7 +156,7 @@ int dma_read_complete(struct fpga_ip *c, char **buf, size_t *len)
 
 int dma_write_complete(struct fpga_ip *c, char **buf, size_t *len)
 {
-	struct dma *dma = (struct dma *) &c->_vd;
+	struct dma *dma = c->_vd;
 
 	XAxiDma *xdma = &dma->inst;
 
@@ -171,7 +171,7 @@ int dma_sg_write(struct fpga_ip *c, char *buf, size_t len)
 {
 	int ret, bdcnt;
 
-	struct dma *dma = (struct dma *) &c->_vd;
+	struct dma *dma = c->_vd;
 
 	XAxiDma *xdma = &dma->inst;
 	XAxiDma_BdRing *ring = XAxiDma_GetTxRing(xdma);
@@ -248,7 +248,7 @@ int dma_sg_read(struct fpga_ip *c, char *buf, size_t len)
 {
 	int ret, bdcnt;
 
-	struct dma *dma = (struct dma *) &c->_vd;
+	struct dma *dma = c->_vd;
 
 	XAxiDma *xdma = &dma->inst;
 	XAxiDma_BdRing *ring = XAxiDma_GetRxRing(xdma);
@@ -316,7 +316,7 @@ out:
 
 int dma_sg_write_complete(struct fpga_ip *c, char **buf, size_t *len)
 {
-	struct dma *dma = (struct dma *) &c->_vd;
+	struct dma *dma = c->_vd;
 
 	XAxiDma *xdma = &dma->inst;
 	XAxiDma_BdRing *ring = XAxiDma_GetTxRing(xdma);
@@ -347,7 +347,7 @@ int dma_sg_write_complete(struct fpga_ip *c, char **buf, size_t *len)
 
 int dma_sg_read_complete(struct fpga_ip *c, char **buf, size_t *len)
 {
-	struct dma *dma = (struct dma *) &c->_vd;
+	struct dma *dma = c->_vd;
 
 	XAxiDma *xdma = &dma->inst;
 	XAxiDma_BdRing *ring = XAxiDma_GetRxRing(xdma);
@@ -401,7 +401,7 @@ int dma_sg_read_complete(struct fpga_ip *c, char **buf, size_t *len)
 
 int dma_simple_read(struct fpga_ip *c, char *buf, size_t len)
 {
-	struct dma *dma = (struct dma *) &c->_vd;
+	struct dma *dma = c->_vd;
 
 	XAxiDma *xdma = &dma->inst;
 	XAxiDma_BdRing *ring = XAxiDma_GetRxRing(xdma);
@@ -439,7 +439,7 @@ int dma_simple_read(struct fpga_ip *c, char *buf, size_t len)
 
 int dma_simple_write(struct fpga_ip *c, char *buf, size_t len)
 {
-	struct dma *dma = (struct dma *) &c->_vd;
+	struct dma *dma = c->_vd;
 
 	XAxiDma *xdma = &dma->inst;
 	XAxiDma_BdRing *ring = XAxiDma_GetTxRing(xdma);
@@ -478,7 +478,7 @@ int dma_simple_write(struct fpga_ip *c, char *buf, size_t len)
 
 int dma_simple_read_complete(struct fpga_ip *c, char **buf, size_t *len)
 {
-	struct dma *dma = (struct dma *) &c->_vd;
+	struct dma *dma = c->_vd;
 
 	XAxiDma *xdma = &dma->inst;
 	XAxiDma_BdRing *ring = XAxiDma_GetRxRing(xdma);
@@ -501,7 +501,7 @@ int dma_simple_read_complete(struct fpga_ip *c, char **buf, size_t *len)
 
 int dma_simple_write_complete(struct fpga_ip *c, char **buf, size_t *len)
 {
-	struct dma *dma = (struct dma *) &c->_vd;
+	struct dma *dma = c->_vd;
 	
 	XAxiDma *xdma = &dma->inst;
 	XAxiDma_BdRing *ring = XAxiDma_GetTxRing(xdma);
@@ -580,7 +580,7 @@ static int dma_init_rings(XAxiDma *xdma, struct dma_mem *bd)
 int dma_start(struct fpga_ip *c)
 {
 	int ret, sg;
-	struct dma *dma = (struct dma *) &c->_vd;
+	struct dma *dma = c->_vd;
 
 	XAxiDma *xdma = &dma->inst;
 	
@@ -635,7 +635,7 @@ int dma_start(struct fpga_ip *c)
 
 int dma_reset(struct fpga_ip *c)
 {
-	struct dma *dma = (struct dma *) &c->_vd;
+	struct dma *dma = c->_vd;
 	
 	XAxiDma_Reset(&dma->inst);
 

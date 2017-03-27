@@ -41,7 +41,7 @@ int intc_start(struct fpga_ip *c)
 	int ret;
 
 	struct fpga_card *f = c->card;
-	struct intc *intc = (struct intc *) &c->_vd;
+	struct intc *intc = c->_vd;
 
 	uintptr_t base = (uintptr_t) f->map + c->baseaddr;
 
@@ -81,7 +81,7 @@ int intc_start(struct fpga_ip *c)
 int intc_destroy(struct fpga_ip *c)
 {
 	struct fpga_card *f = c->card;
-	struct intc *intc = (struct intc *) &c->_vd;
+	struct intc *intc = c->_vd;
 
 	vfio_pci_msi_deinit(&f->vfio_device, intc->efds);
 	
@@ -91,7 +91,7 @@ int intc_destroy(struct fpga_ip *c)
 int intc_enable(struct fpga_ip *c, uint32_t mask, int flags)
 {
 	struct fpga_card *f = c->card;
-	struct intc *intc = (struct intc *) &c->_vd;
+	struct intc *intc = c->_vd;
 
 	uint32_t ier, imr;
 	uintptr_t base = (uintptr_t) f->map + c->baseaddr;
@@ -141,7 +141,7 @@ int intc_disable(struct fpga_ip *c, uint32_t mask)
 uint64_t intc_wait(struct fpga_ip *c, int irq)
 {
 	struct fpga_card *f = c->card;
-	struct intc *intc = (struct intc *) &c->_vd;
+	struct intc *intc = c->_vd;
 
 	uintptr_t base = (uintptr_t) f->map + c->baseaddr;
 
