@@ -50,8 +50,6 @@ void usage()
 	printf("      -d    Set log level\n\n");
 
 	print_copyright();
-
-	exit(EXIT_FAILURE);
 }
 
 int main(int argc, char *argv[])
@@ -61,8 +59,10 @@ int main(int argc, char *argv[])
 	struct super_node sn;
 	struct fpga_card *card;
 
-	if (argc < 3)
+	if (argc < 3) {
 		usage(argv[0]);
+		exit(EXIT_FAILURE);
+	}
 
 	/* Parse arguments */
 	char c, *endptr;
@@ -75,6 +75,7 @@ int main(int argc, char *argv[])
 			case '?':
 			default:
 				usage();
+				exit(EXIT_SUCCESS);
 		}
 	}
 

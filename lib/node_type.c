@@ -35,7 +35,8 @@ int node_type_start(struct node_type *vt, int argc, char *argv[], config_setting
 {
 	int ret;
 	
-	assert(vt->state != STATE_STARTED);
+	if (vt->state != STATE_STARTED)
+		return 0;
 
 	info("Initializing " YEL("%s") " node type which is used by %zu nodes", plugin_name(vt), list_length(&vt->instances));
 	{ INDENT
@@ -52,7 +53,8 @@ int node_type_stop(struct node_type *vt)
 {
 	int ret;
 	
-	assert(vt->state == STATE_STARTED);
+	if (vt->state != STATE_STARTED)
+		return 0;
 
 	info("De-initializing " YEL("%s") " node type", plugin_name(vt));
 	{ INDENT
