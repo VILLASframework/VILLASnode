@@ -42,6 +42,8 @@
   #include <villas/nodes/opal.h>
 #endif
 
+#include "config.h"
+
 struct super_node sn;
 
 static void quit(int signal, siginfo_t *sinfo, void *ctx)
@@ -100,7 +102,7 @@ int main(int argc, char *argv[])
 		usage();
 #endif
 	
-	info("This is VILLASnode %s (built on %s, %s)", BLD(YEL(VERSION_STR)),
+	info("This is VILLASnode %s (built on %s, %s)", BLD(YEL(BUILDID)),
 		BLD(MAG(__DATE__)), BLD(MAG(__TIME__)));
 
 	/* Checks system requirements*/

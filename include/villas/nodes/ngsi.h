@@ -40,7 +40,6 @@
 #include <jansson.h>
 
 #include "list.h"
-#include "config.h"
 #include "msg.h"
 #include "super_node.h"
 #include "node.h"

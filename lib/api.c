@@ -38,11 +38,11 @@ size_t json_dumpb(const json_t *json, char *buffer, size_t size, size_t flags)
 	if (!str)
 		return 0;
 	
-	len = strlen(str) - 1; // not \0 terminated
+	len = strlen(str); // not \0 terminated
 	if (buffer && len <= size)
 		memcpy(buffer, str, len);
 
-	//free(str);
+	free(str);
 
 	return len;
 }
@@ -67,6 +67,8 @@ static int api_parse_request(struct api_buffer *b, json_t **req)
 		
 		b->len -= e.position;
 	}
+	else
+		b->len = 0;
 
 	return 1;
 }
@@ -78,9 +80,11 @@ static int api_unparse_response(struct api_buffer *b, json_t *res)
 retry:	len = json_dumpb(res, b->buf + b->len, b->size - b->len, 0);
 	if (len > b->size - b->len) {
 		b->buf = realloc(b->buf, b->len + len);
-		b->len += len;
+		b->size += len;
 		goto retry;
 	}
+	else
+		b->len += len;
 	
 	return 0;
 }
@@ -107,8 +111,9 @@ int api_session_run_command(struct api_session *s, json_t *req, json_t **resp)
 				"error", "command not found",
 				"code", -2,
 				"command", rstr);
-				
-	debug(LOG_API, "Running API request: %s with arguments: %s", p->name, json_dumps(args, 0));
+	
+
+	debug(LOG_API, "Running API request: %s", p->name);
 
 	ret = p->api.cb(&p->api, args, resp, s);
 	if (ret)
@@ -116,7 +121,7 @@ int api_session_run_command(struct api_session *s, json_t *req, json_t **resp)
 				"error", "command failed",
 				"code", ret);
 
-	debug(LOG_API, "API request completed with code: %d and output: %s", ret, json_dumps(*resp, 0));
+	debug(LOG_API, "API request completed with code: %d", ret);
 
 	return 0;
 }
@@ -167,10 +172,10 @@ int api_http_protocol_cb(struct lws *wsi, enum lws_callback_reasons reason, void
 			/* Prepare HTTP response header */
 			const char headers[] =	"HTTP/1.1 200 OK\r\n"
 						"Content-type: application/json\r\n"
-						"User-agent: " USER_AGENT
+						"User-agent: " USER_AGENT "\r\n"
 						"\r\n";
 			
-			api_buffer_append(&s->response.headers, headers, sizeof(headers));
+			api_buffer_append(&s->response.headers, headers, sizeof(headers)-1);
 
 			/* book us a LWS_CALLBACK_HTTP_WRITEABLE callback */
 			lws_callback_on_writable(wsi);
@@ -185,12 +190,8 @@ int api_http_protocol_cb(struct lws *wsi, enum lws_callback_reasons reason, void
 			
 			json_t *req, *resp;
 			while (api_parse_request(&s->request.body, &req) == 1) {
-
 				api_session_run_command(s, req, &resp);
-
 				api_unparse_response(&s->response.body, resp);
-				
-				debug(LOG_WEB, "Sending response: %s len=%zu", s->response.body.buf, s->response.body.len);
 
 				lws_callback_on_writable(wsi);
 			}
@@ -206,9 +207,9 @@ int api_http_protocol_cb(struct lws *wsi, enum lws_callback_reasons reason, void
 		case LWS_CALLBACK_HTTP_WRITEABLE:
 			/* We send headers only in HTTP mode */
 			if (s->mode == API_MODE_HTTP)
-				api_buffer_send(&s->response.headers, wsi);
+				api_buffer_send(&s->response.headers, wsi, LWS_WRITE_HTTP_HEADERS);
 
-			api_buffer_send(&s->response.body, wsi);
+			api_buffer_send(&s->response.body, wsi, LWS_WRITE_HTTP);
 			
 			if (s->completed && s->response.body.len == 0)
 				return -1;
@@ -222,14 +223,14 @@ int api_http_protocol_cb(struct lws *wsi, enum lws_callback_reasons reason, void
 	return 0;
 }
 
-int api_buffer_send(struct api_buffer *b, struct lws *w)
+int api_buffer_send(struct api_buffer *b, struct lws *w, enum lws_write_protocol prot)
 {
 	int sent;
 	
 	if (b->len <= 0)
 		return 0;
-	
-	sent = lws_write(w, (unsigned char *) b->buf, b->len, LWS_WRITE_HTTP_HEADERS);
+
+	sent = lws_write(w, (unsigned char *) b->buf, b->len, prot);
 	if (sent > 0) {
 		memmove(b->buf, b->buf + sent, sent);
 		b->len -= sent;
@@ -301,7 +302,11 @@ int api_session_init(struct api_session *s, struct api *a, enum api_mode m)
 	
 	s->request.body = 
 	s->response.body =
-	s->response.headers = (struct api_buffer) { 0 };
+	s->response.headers = (struct api_buffer) {
+		.buf = NULL,
+		.size = 0,
+		.len = 0
+	};
 	
 	return 0;
 }
