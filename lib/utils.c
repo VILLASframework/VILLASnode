@@ -454,8 +454,10 @@ int sha1sum(FILE *f, unsigned char *sha1)
 	SHA_CTX c;
 	char buf[512];
 	ssize_t bytes;
+	long seek;
 	
-	rewind(f); /* Rewind the file in order to calculate over the whole file. */
+	seek = ftell(f);
+	fseek(f, 0, SEEK_SET);
 
 	SHA1_Init(&c);
 
@@ -466,6 +468,8 @@ int sha1sum(FILE *f, unsigned char *sha1)
 	}
 
 	SHA1_Final(sha1, &c);
+	
+	fseek(f, seek, SEEK_SET);
 
 	return 0;
 }
