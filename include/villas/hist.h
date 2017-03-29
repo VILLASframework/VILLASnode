@@ -29,8 +29,6 @@
 
 #include <jansson.h>
 
-#include "config.h"
-
 #define HIST_HEIGHT	(LOG_WIDTH - 55)
 #define HIST_SEQ	17
 
