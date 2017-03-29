@@ -1,7 +1,7 @@
 /** Various socket related functions
  *
  * @author Steffen Vogel <stvogel@eonerc.rwth-aachen.de>
- * @copyright 2016, Institute for Automation of Complex Power Systems, EONERC
+ * @copyright 2017, Institute for Automation of Complex Power Systems, EONERC
  * @license GNU Lesser General Public License v2.1
  *
  * VILLASnode - connecting real-time simulation equipment
@@ -21,17 +21,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 
-#include <string.h>
 #include <unistd.h>
-
-#include <sys/types.h>
 #include <sys/socket.h>
-#include <sys/ioctl.h>
-#include <sys/un.h>
-
-#include <netinet/ether.h>
 #include <netinet/ip.h>
-#include <linux/if_packet.h>
+#include <netinet/ether.h>
 #include <arpa/inet.h>
 
 #ifdef __linux__
@@ -52,23 +45,25 @@
 #include "msg.h"
 #include "sample.h"
 #include "queue.h"
+#include "plugin.h"
 
 /* Forward declartions */
-static struct node_type vt;
+static struct plugin p;
 
 /* Private static storage */
 struct list interfaces;
 
-int socket_init(int argc, char * argv[], config_setting_t *cfg)
+int socket_init(int argc, char *argv[], config_setting_t *cfg)
 {
 	if (getuid() != 0)
-		error("The 'socket' node-type requires superuser privileges!");
+		error("The 'socket' node-type requires super-user privileges!");
 
 	nl_init(); /* Fill link cache */
 	list_init(&interfaces);
 
 	/* Gather list of used network interfaces */
-	list_foreach(struct node *n, &vt.instances) {
+	for (size_t i = 0; i < list_length(&p.node.instances); i++) {
+		struct node *n = list_at(&p.node.instances, i);
 		struct socket *s = n->_vd;
 		struct rtnl_link *link;
 
@@ -81,14 +76,21 @@ int socket_init(int argc, char * argv[], config_setting_t *cfg)
 
 		/* Search of existing interface with correct ifindex */
 		struct interface *i;
-		list_foreach(i, &interfaces) {
+		
+		for (size_t k = 0; k < list_length(&interfaces); k++) {
+			i = list_at(&interfaces, k);
+			
 			if (rtnl_link_get_ifindex(i->nl_link) == rtnl_link_get_ifindex(link))
 				goto found;
 		}
 
 		/* If not found, create a new interface */
-		i = if_create(link);
-		list_push(&interfaces, i);
+		struct interface j;
+		
+		if_init(&j, link);
+		
+		list_push(&interfaces, memdup(&j, sizeof(j)));
+		i = &j;
 
 found:		list_push(&i->sockets, s);
 	}
@@ -98,16 +100,22 @@ found:		list_push(&i->sockets, s);
 	if (!config_setting_lookup_int(cfg, "affinity", &affinity))
 		affinity = -1;
 
-	list_foreach(struct interface *i, &interfaces)
+	for (size_t j = 0; list_length(&interfaces); j++) {
+		struct interface *i = list_at(&interfaces, j);
+
 		if_start(i, affinity);
+	}
 
 	return 0;
 }
 
 int socket_deinit()
 {
-	list_foreach(struct interface *i, &interfaces)
+	for (size_t j = 0; list_length(&interfaces); j++) {
+		struct interface *i = list_at(&interfaces, j);
+		
 		if_stop(i);
+	}
 
 	list_destroy(&interfaces, (dtor_cb_t) if_destroy, false);
 
@@ -133,11 +141,12 @@ char * socket_print(struct node *n)
 	
 	if (s->header == SOCKET_HEADER_DEFAULT)
 		endian = "auto";
-	else
+	else {
 		switch (s->endian) {
 			case MSG_ENDIAN_LITTLE:	endian = "little";	break;
 			case MSG_ENDIAN_BIG:	endian = "big";		break;
 		}
+	}
 
 	char *local = socket_print_addr((struct sockaddr *) &s->local);
 	char *remote = socket_print_addr((struct sockaddr *) &s->remote);
@@ -150,7 +159,7 @@ char * socket_print(struct node *n)
 	return buf;
 }
 
-int socket_open(struct node *n)
+int socket_start(struct node *n)
 {
 	struct socket *s = n->_vd;
 	struct sockaddr_in *sin = (struct sockaddr_in *) &s->local;
@@ -180,7 +189,7 @@ int socket_open(struct node *n)
 		if (ret)
 			serror("Failed to set FW mark for outgoing packets");
 		else
-			debug(DBG_SOCKET | 4, "Set FW mark for socket (sd=%u) to %u", s->sd, s->mark);
+			debug(LOG_SOCKET | 4, "Set FW mark for socket (sd=%u) to %u", s->sd, s->mark);
 	}
 
 	/* Set socket priority, QoS or TOS IP options */
@@ -192,7 +201,7 @@ int socket_open(struct node *n)
 			if (setsockopt(s->sd, IPPROTO_IP, IP_TOS, &prio, sizeof(prio)))
 				serror("Failed to set type of service (QoS)");
 			else
-				debug(DBG_SOCKET | 4, "Set QoS/TOS IP option for node %s to %#x", node_name(n), prio);
+				debug(LOG_SOCKET | 4, "Set QoS/TOS IP option for node %s to %#x", node_name(n), prio);
 			break;
 
 		default:
@@ -200,7 +209,7 @@ int socket_open(struct node *n)
 			if (setsockopt(s->sd, SOL_SOCKET, SO_PRIORITY, &prio, sizeof(prio)))
 				serror("Failed to set socket priority");
 			else
-				debug(DBG_SOCKET | 4, "Set socket priority for node %s to %d", node_name(n), prio);
+				debug(LOG_SOCKET | 4, "Set socket priority for node %s to %d", node_name(n), prio);
 			break;
 	}
 
@@ -219,7 +228,7 @@ int socket_reverse(struct node *n)
 	return 0;
 }
 
-int socket_close(struct node *n)
+int socket_stop(struct node *n)
 {
 	struct socket *s = n->_vd;
 
@@ -403,7 +412,7 @@ int socket_read(struct node *n, struct sample *smps[], unsigned cnt)
 		}
 	}
 
-	debug(DBG_SOCKET | 17, "Received message of %zd bytes: %u samples", bytes, received);
+	debug(LOG_SOCKET | 17, "Received message of %zd bytes: %u samples", bytes, received);
 
 	return received;
 }
@@ -445,7 +454,7 @@ int socket_write(struct node *n, struct sample *smps[], unsigned cnt)
 
 			sent++;
 
-			debug(DBG_SOCKET | 17, "Sent packet of %zd bytes with 1 sample", bytes);
+			debug(LOG_SOCKET | 17, "Sent packet of %zd bytes with 1 sample", bytes);
 		}
 	}
 	else {
@@ -479,7 +488,7 @@ int socket_write(struct node *n, struct sample *smps[], unsigned cnt)
 
 		sent = cnt; /** @todo Find better way to determine how many values we actually sent */
 
-		debug(DBG_SOCKET | 17, "Sent packet of %zd bytes with %u samples", bytes, cnt);
+		debug(LOG_SOCKET | 17, "Sent packet of %zd bytes with %u samples", bytes, cnt);
 	}
 
 	return sent;
@@ -692,21 +701,25 @@ int socket_parse_addr(const char *addr, struct sockaddr *saddr, enum socket_laye
 	return ret;
 }
 
-static struct node_type vt = {
+static struct plugin p = {
 	.name		= "socket",
 	.description	= "BSD network sockets",
-	.vectorize	= 0,
-	.size		= sizeof(struct socket),
-	.destroy	= socket_destroy,
-	.reverse	= socket_reverse,
-	.parse		= socket_parse,
-	.print		= socket_print,
-	.open		= socket_open,
-	.close		= socket_close,
-	.read		= socket_read,
-	.write		= socket_write,
-	.init		= socket_init,
-	.deinit		= socket_deinit
+	.type		= PLUGIN_TYPE_NODE,
+	.node		= {
+		.vectorize	= 0,
+		.size		= sizeof(struct socket),
+		.destroy	= socket_destroy,
+		.reverse	= socket_reverse,
+		.parse		= socket_parse,
+		.print		= socket_print,
+		.start		= socket_start,
+		.stop		= socket_stop,
+		.read		= socket_read,
+		.write		= socket_write,
+		.init		= socket_init,
+		.deinit		= socket_deinit,
+		.instances	= LIST_INIT()
+	}
 };
 
-REGISTER_NODE_TYPE(&vt)
+REGISTER_PLUGIN(&p)

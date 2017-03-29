@@ -1,11 +1,51 @@
-#include <villas/hooks.h>
-#include <villas/log.h>
+/** A simple example hook function which can be loaded as a plugin.
+ *
+ * @author Steffen Vogel <stvogel@eonerc.rwth-aachen.de>
+ * @copyright 2017, Institute for Automation of Complex Power Systems, EONERC
+ * @license GNU Lesser General Public License v2.1
+ *
+ * VILLASnode - connecting real-time simulation equipment
+ *
+ * This application is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License.
+ *
+ * This application is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *********************************************************************************/
 
-static int hook_example(struct path *p, struct hook *h, int when, struct sample *smps[], size_t cnt)
+#include <stddef.h>
+
+#include <villas/hook.h>
+#include <villas/log.h>
+#include <villas/plugin.h>
+
+struct hook;
+struct path;
+struct sample;
+
+static int example_start(struct hook *h)
 {
 	info("Hello world from example hook!");
-	
+
 	return 0;
 }
 
-REGISTER_HOOK("example", "This is just a simple example hook", 99, 0, hook_example, HOOK_PATH_START)
+static struct plugin p = {
+	.name		= "example",
+	.description	= "This is just a simple example hook",
+	.type		= PLUGIN_TYPE_HOOK,
+	.hook		= {
+		.priority = 99,
+		.start	= example_start
+	}
+};
+
+REGISTER_PLUGIN(&p)
