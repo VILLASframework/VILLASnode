@@ -168,7 +168,7 @@ int websocket_protocol_cb(struct lws *wsi, enum lws_callback_reasons reason, voi
 	
 	switch (reason) {
 		case LWS_CALLBACK_CLIENT_ESTABLISHED:
-		case LWS_CALLBACK_ESTABLISHED: {
+		case LWS_CALLBACK_ESTABLISHED:
 			c->state = STATE_DESTROYED;
 			
 			/* Get path of incoming request */
@@ -203,7 +203,6 @@ int websocket_protocol_cb(struct lws *wsi, enum lws_callback_reasons reason, voi
 				return -1;
 
 			return 0;
-		}
 
 		case LWS_CALLBACK_CLOSED:
 			websocket_connection_destroy(c);
@@ -242,7 +241,7 @@ int websocket_protocol_cb(struct lws *wsi, enum lws_callback_reasons reason, voi
 			return 0;
 
 		case LWS_CALLBACK_CLIENT_RECEIVE:
-		case LWS_CALLBACK_RECEIVE: {
+		case LWS_CALLBACK_RECEIVE:
 			w = c->node->_vd;
 
 			if (c->node->state != STATE_STARTED)
@@ -275,9 +274,7 @@ int websocket_protocol_cb(struct lws *wsi, enum lws_callback_reasons reason, voi
 				/* Next message */
 				msg = (struct webmsg *) ((char *) msg + WEBMSG_LEN(msg->length));
 			}
-		
 			return 0;
-		}
 
 		default:
 			return 0;
