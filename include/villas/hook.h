@@ -189,6 +189,7 @@ int hook_stats_send(struct hook *h, int when, struct hook_info *j);
 int hook_stats(struct hook *h, int when, struct hook_info *j);
 
 int hook_fix_ts(struct hook *h, int when, struct hook_info *j);
+int hook_jitter_ts(struct hook *h, int when, struct hook_info *j);
 int hook_restart(struct hook *h, int when, struct hook_info *j);
 int hook_drop(struct hook *h, int when, struct hook_info *j);
 

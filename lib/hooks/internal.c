@@ -27,6 +27,74 @@
 #include "path.h"
 #include "utils.h"
 
+/**
+ * Hook to calculate jitter between GTNET-SKT GPS timestamp and Villas node NTP timestamp.
+ *
+ * Drawbacks: No protection for out of order packets. Also always positive delay assumed,
+ * so GPS timestamp should be earlier than NTP timestamp.
+ */
+ #define CALC_GPS_NTP_DELAY 1
+ #define GPS_NTP_DELAY_WIN_SIZE 8
+
+#if CALC_GPS_NTP_DELAY == 1
+REGISTER_HOOK("ntp_jitter_calc", "Calc jitter b/w GPS and NTP timstamp", 0, 0, hook_jitter_ts, HOOK_AUTO | HOOK_READ)
+#endif
+int hook_jitter_ts(struct hook *h, int when, struct hook_info *j)
+{
+	/* @todo add data to each node, not just displaying on the screen, doesn't work for more than one node */
+	struct timespec now = time_now();
+	assert(j->smps);
+	
+	static int64_t jitter_val[GPS_NTP_DELAY_WIN_SIZE] = {0};	// no protection for out of order pkts
+	static int64_t last_delta[GPS_NTP_DELAY_WIN_SIZE] = {0};
+	static int64_t moving_avg[GPS_NTP_DELAY_WIN_SIZE] = {0};
+	static int64_t moving_sqrd_avg[GPS_NTP_DELAY_WIN_SIZE] = {0};
+	static int64_t moving_var[GPS_NTP_DELAY_WIN_SIZE] = {0};
+	static int64_t temp_sum = 0, temp_sqrd_sum = 0;
+	static int curr_count = 1;
+	int64_t delay_sec, delay_nsec, curr_temp_delta;
+	
+	for(int i = 0; i < j->cnt; i++) {
+		delay_sec = j->smps[i]->ts.origin.tv_sec - now.tv_sec;
+		delay_nsec = j->smps[i]->ts.origin.tv_nsec - now.tv_nsec;
+		
+		curr_temp_delta = delay_sec*1000000000 + delay_nsec; // Assuming always positive values i.e. GPS TS older than NTP one
+		temp_sum = temp_sum + curr_temp_delta - last_delta[curr_count];
+		moving_avg[curr_count] = temp_sum/(GPS_NTP_DELAY_WIN_SIZE-1); // Will be valid after GPS_NTP_DELAY_WIN_SIZE-1 initial values
+		
+		temp_sqrd_sum = temp_sqrd_sum + (curr_temp_delta*curr_temp_delta) - (last_delta[curr_count]*last_delta[curr_count]);
+		moving_sqrd_avg[curr_count] = temp_sqrd_sum/(GPS_NTP_DELAY_WIN_SIZE-1);
+		moving_var[curr_count] = moving_sqrd_avg[curr_count] - (moving_avg[curr_count]*moving_avg[curr_count]); /* further test this logic */
+		
+		info("temp_sqrd_sum %ld, moving_sqrd_avg %ld, moving_var %ld, moving_avg sqrd %ld", temp_sqrd_sum, moving_sqrd_avg[curr_count], moving_var[curr_count], (moving_avg[curr_count]*moving_avg[curr_count]));
+		
+		last_delta[curr_count] = curr_temp_delta;
+		
+		/* Jitter calc formula as used in Wireshark according to RFC3550 (RTP)
+			D(i,j) = (Rj-Ri)-(Sj-Si) = (Rj-Sj)-(Ri-Si)
+			J(i) = J(i-1)+(|D(i-1,i)|-J(i-1))/16
+		*/
+		jitter_val[curr_count] = jitter_val[curr_count-1] + (abs(last_delta[curr_count]) - jitter_val[curr_count-1])/16;
+		
+		info("jitter value %ld nsec, last jitter val %ld nsec, delay value %ld nsec", jitter_val[curr_count], jitter_val[curr_count-1], last_delta[curr_count]);
+		
+		for(int ctmp = 0; ctmp < GPS_NTP_DELAY_WIN_SIZE; ctmp++) {
+			info("%d jitter value %ld nsec, last delta %ld nsec, moving avg %ld, moving variance %ld, moving sqrd avg %ld", ctmp, jitter_val[ctmp], last_delta[ctmp], moving_avg[ctmp], moving_var[ctmp], moving_sqrd_avg[ctmp]);
+		}
+		
+		if(curr_count == GPS_NTP_DELAY_WIN_SIZE-1) {
+			jitter_val[0] = jitter_val[curr_count];
+			last_delta[0] = last_delta[curr_count];
+			moving_avg[0] = moving_avg[curr_count];
+			moving_var[0] = moving_var[curr_count];
+			moving_sqrd_avg[0] = moving_sqrd_avg[curr_count];
+			curr_count = 0;
+		}
+		curr_count++;
+	}
+	return j->cnt;
+}
+
 REGISTER_HOOK("fix_ts", "Update timestamps of sample if not set", 0, 0, hook_fix_ts, HOOK_AUTO | HOOK_READ)
 int hook_fix_ts(struct hook *h, int when, struct hook_info *j)
 {
