@@ -2,7 +2,7 @@
  *
  * @file
  * @author Steffen Vogel <stvogel@eonerc.rwth-aachen.de>
- * @copyright 2016, Institute for Automation of Complex Power Systems, EONERC
+ * @copyright 2017, Institute for Automation of Complex Power Systems, EONERC
  * @license GNU Lesser General Public License v2.1
  *
  * VILLASnode - connecting real-time simulation equipment
@@ -22,12 +22,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 
-#ifndef _LINUX_H_
-#define _LINUX_H_
+/** @addtogroup fpga Kernel @{ */
+
+#pragma once
 
 #include <stdint.h>
 
-#include "config.h"
+/* Forward declarations */
+struct version;
 
 //#include <sys/capability.h>
 
@@ -44,15 +46,6 @@ int kernel_get_nr_hugepages();
 /** Set number of reserved hugepages. */
 int kernel_set_nr_hugepages(int nr);
 
-/** Checks for realtime (PREEMPT_RT) patched kernel.
- *
- * See https://rt.wiki.kernel.org
- *
- * @retval 0 Kernel is patched.
- * @reval <>0 Kernel is not patched.
- */
-int kernel_is_rt();
-
 /** Get kernel cmdline parameter
  *
  * See https://www.kernel.org/doc/Documentation/kernel-parameters.txt
@@ -65,12 +58,8 @@ int kernel_is_rt();
  */
 int kernel_get_cmdline_param(const char *param, char *buf, size_t len);
 
-/** Check if kernel is version is sufficient
- *
- * @retval 0 Kernel version is sufficient.
- * @reval <>0 Kernel version is not sufficient.
- */
-int kernel_has_version(int maj, int min);
+/** Get the version of the kernel. */
+int kernel_get_version(struct version *v);
 
 /** Checks if a kernel module is loaded
  *
@@ -89,7 +78,13 @@ int kernel_module_set_param(const char *module, const char *param, const char *v
 /** Get cacheline size in bytes */
 int kernel_get_cacheline_size();
 
+/** Get the size of a standard page in bytes. */
+int kernel_get_page_size();
+
+/** Get the size of a huge page in bytes. */
+int kernel_get_hugepage_size();
+
 /** Set SMP affinity of IRQ */
 int kernel_irq_setaffinity(unsigned irq, uintmax_t new, uintmax_t *old);
 
-#endif /* _LINUX_H_ */
+/** @} */

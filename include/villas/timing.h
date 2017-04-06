@@ -2,7 +2,7 @@
  *
  * @file
  * @author Steffen Vogel <stvogel@eonerc.rwth-aachen.de>
- * @copyright 2016, Institute for Automation of Complex Power Systems, EONERC
+ * @copyright 2017, Institute for Automation of Complex Power Systems, EONERC
  * @license GNU Lesser General Public License v2.1
  *
  * VILLASnode - connecting real-time simulation equipment
@@ -22,8 +22,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA 
  *********************************************************************************/
 
-#ifndef _TIME_H_
-#define _TIME_H_
+#pragma once
 
 #include <stdio.h>
 #include <stdint.h>
@@ -68,5 +67,3 @@ double time_to_double(struct timespec *ts);
 
 /** Convert double containing seconds after 1970 to timespec. */
 struct timespec time_from_double(double secs);
-
-#endif /* _TIMING_H_ */

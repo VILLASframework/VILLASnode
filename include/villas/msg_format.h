@@ -2,7 +2,7 @@
  *
  * @file
  * @author Steffen Vogel <stvogel@eonerc.rwth-aachen.de>
- * @copyright 2016, Institute for Automation of Complex Power Systems, EONERC
+ * @copyright 2017, Institute for Automation of Complex Power Systems, EONERC
  * @license GNU Lesser General Public License v2.1
  *
  * VILLASnode - connecting real-time simulation equipment
@@ -22,8 +22,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA 
  *********************************************************************************/
 
-#ifndef _MSG_FORMAT_H_
-#define _MSG_FORMAT_H_
+#pragma once
 
 #include <stdint.h>
 
@@ -111,5 +110,3 @@ struct msg
 		uint32_t i;	/**< Integer values (note msg::endian) */
 	} data[];
 } __attribute__((packed));
-
-#endif /* _MSG_FORMAT_H_ */

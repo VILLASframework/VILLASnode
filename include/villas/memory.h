@@ -2,7 +2,7 @@
  *
  * @file
  * @author Steffen Vogel <stvogel@eonerc.rwth-aachen.de>
- * @copyright 2016, Institute for Automation of Complex Power Systems, EONERC
+ * @copyright 2017, Institute for Automation of Complex Power Systems, EONERC
  * @license GNU Lesser General Public License v2.1
  *
  * VILLASnode - connecting real-time simulation equipment
@@ -20,13 +20,12 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- */
+ *********************************************************************************/
 
 #include <stddef.h>
 #include <stdint.h>
 
-#ifndef _MEMORY_H_
-#define _MEMORY_H_
+#pragma once
 
 #define HUGEPAGESIZE	(1 << 21)
 
@@ -77,7 +76,7 @@ struct memzone {
 };
 
 /** Initilialize memory subsystem */
-int memory_init();
+int memory_init(int hugepages);
 
 /** Allocate \p len bytes memory of type \p m.
  *
@@ -90,9 +89,7 @@ void * memory_alloc_aligned(struct memtype *m, size_t len, size_t alignment);
 
 int memory_free(struct memtype *m, void *ptr, size_t len);
 
-struct memtype* memtype_managed_init(void *ptr, size_t len);
+struct memtype * memtype_managed_init(void *ptr, size_t len);
 
 extern struct memtype memtype_heap;
 extern struct memtype memtype_hugepage;
-
-#endif /* _MEMORY_H_ */

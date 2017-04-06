@@ -7,7 +7,7 @@
  *
  * @file
  * @author Steffen Vogel <stvogel@eonerc.rwth-aachen.de>
- * @copyright 2016, Institute for Automation of Complex Power Systems, EONERC
+ * @copyright 2017, Institute for Automation of Complex Power Systems, EONERC
  * @license GNU Lesser General Public License v2.1
  *
  * VILLASnode - connecting real-time simulation equipment
@@ -27,8 +27,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA 
  *********************************************************************************/
 
-#ifndef _TC_H_
-#define _TC_H_
+/** @addtogroup fpga Kernel @{ */
+
+#pragma once
 
 #include <stdint.h>
 
@@ -99,4 +100,4 @@ int tc_netem(struct interface *i, struct rtnl_qdisc **qd, tc_hdl_t handle, tc_hd
 */
 int tc_mark(struct interface *i, struct rtnl_cls **cls, tc_hdl_t flowid, uint32_t mark);
 
-#endif /* _TC_H_ */
+/** @} */

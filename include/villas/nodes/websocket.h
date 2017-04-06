@@ -5,7 +5,7 @@
  *
  * @file
  * @author Steffen Vogel <stvogel@eonerc.rwth-aachen.de>
- * @copyright 2016, Institute for Automation of Complex Power Systems, EONERC
+ * @copyright 2017, Institute for Automation of Complex Power Systems, EONERC
  * @license GNU Lesser General Public License v2.1
  *
  * VILLASnode - connecting real-time simulation equipment
@@ -23,22 +23,22 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA 
- */
+ *********************************************************************************/
+
 /**
  * @addtogroup websockets WebSockets node type
  * @ingroup node
  * @{
- *********************************************************************************/
+ */
 
-
-#ifndef _WEBSOCKET_H_
-#define _WEBSOCKET_H_
+#pragma once
 
 #include <libwebsockets.h>
 
 #include "node.h"
 #include "pool.h"
 #include "queue.h"
+#include "common.h"
 
 /* Forward declaration */
 struct lws;
@@ -51,20 +51,46 @@ struct websocket {
 	struct pool pool;
 	struct queue queue;			/**< For samples which are received from WebSockets a */
 	
-	int id;					/**< The index of this node */
+	pthread_mutex_t mutex;			/**< Mutex for signalling the availability of new samples in struct websocket::queue. */
+	pthread_cond_t cond;			/**< Condition variable for signalling the availability of new samples in struct websocket::queue. */
 };
 
+/* Internal datastructures */
+struct websocket_connection {
+	struct node *node;
+	struct lws *wsi;
+	
+	struct queue queue;			/**< For samples which are sent to the WebSocket */	
+	
+	struct {
+		char name[64];
+		char ip[64];
+	} peer;
+	
+	enum state state;
+	
+	char *_name;
+};
+
+/* Internal datastructures */
+struct websocket_destination {
+	char *uri;
+	struct lws_client_connect_info info;
+};
+
+int websocket_protocol_cb(struct lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len);
+
 /** @see node_vtable::init */
-int websocket_init(int argc, char * argv[], config_setting_t *cfg);
+int websocket_init(int argc, char *argv[], config_setting_t *cfg);
 
 /** @see node_vtable::deinit */
 int websocket_deinit();
 
 /** @see node_vtable::open */
-int websocket_open(struct node *n);
+int websocket_start(struct node *n);
 
 /** @see node_vtable::close */
-int websocket_close(struct node *n);
+int websocket_stop(struct node *n);
 
 /** @see node_vtable::close */
 int websocket_destroy(struct node *n);
@@ -75,4 +101,4 @@ int websocket_read(struct node *n, struct sample *smps[], unsigned cnt);
 /** @see node_vtable::write */
 int websocket_write(struct node *n, struct sample *smps[], unsigned cnt);
 
-#endif /** _WEBSOCKET_H_ @} */
+/** @} */
