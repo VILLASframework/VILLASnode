@@ -4,6 +4,7 @@ variables:
   DOCKER_REGISTRY: acs-public:5000
   DOCKER_IMAGE: villas:latest
   PREFIX: /usr/
+  RSYNC_OPTS: --recursive --ignore-missing-args --chown $DEPLOY_USER:$DEPLOY_USER
 
 stages:
   - prepare
@@ -110,8 +111,9 @@ website:
 deliver:
   stage: deploy
   script:
-    - rsync -r build/release/doc/html/ $DEPLOY_PATH/doc/$CI_BUILD_REF_NAME/
-    - rsync -r build/release-coverage/coverage/ $DEPLOY_PATH/coverage/$CI_BUILD_REF_NAME/
+    - ssh $DEPLOY_USER@$DEPLOY_HOST mkdir -p $DEPLOY_PATH/{coverage,doc}/$CI_BUILD_REF_NAME/
+    - rsync $RSYNC_OPTS build/release-coverage/coverage/  $DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/coverage/$CI_BUILD_REF_NAME/
+    - rsync $RSYNC_OPTS build/release/doc/html/           $DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/doc/$CI_BUILD_REF_NAME/
   dependencies:
    - docs
    - coverage
