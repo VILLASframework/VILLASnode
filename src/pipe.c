@@ -61,6 +61,8 @@ pthread_t ptid; /**< Parent thread id */
 
 static void quit(int signal, siginfo_t *sinfo, void *ctx)
 {
+	int ret;
+
 	if (recvv.started) {
 		pthread_cancel(recvv.thread);
 		pthread_join(recvv.thread, NULL);
@@ -72,13 +74,11 @@ static void quit(int signal, siginfo_t *sinfo, void *ctx)
 		pthread_join(sendd.thread, NULL);
 		pool_destroy(&sendd.pool);
 	}
-
-	if (node->_vt->start == websocket_start)
-		web_stop(&sn.web);
-
-	node_stop(node);
-	node_type_stop(node->_vt);
-
+	
+	ret = super_node_stop(&sn);
+	if (ret)
+		error("Failed to stop super-node");
+	
 	super_node_destroy(&sn);
 
 	info(GRN("Goodbye!"));
@@ -224,7 +224,7 @@ int main(int argc, char *argv[])
 		usage();
 		exit(EXIT_FAILURE);
 	}
-
+	
 	log_init(&sn.log, level, LOG_ALL);
 	log_start(&sn.log);
 	
@@ -241,8 +241,8 @@ int main(int argc, char *argv[])
 		error("Node '%s' does not exist!", argv[optind+1]);
 
 	if (node->_vt->start == websocket_start) {
-		web_init(&sn.web, NULL); /* API is disabled in villas-pipe */
 		web_start(&sn.web);
+		api_start(&sn.api);
 	}
 
 	if (reverse)
