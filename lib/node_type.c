@@ -22,7 +22,6 @@
  *********************************************************************************/
 
 #include <string.h>
-#include <libconfig.h>
 
 #include "sample.h"
 #include "node.h"
@@ -31,7 +30,7 @@
 #include "config.h"
 #include "plugin.h"
 
-int node_type_start(struct node_type *vt, int argc, char *argv[], config_setting_t *cfg)
+int node_type_start(struct node_type *vt, struct super_node *sn)
 {
 	int ret;
 	
@@ -40,7 +39,7 @@ int node_type_start(struct node_type *vt, int argc, char *argv[], config_setting
 
 	info("Initializing " YEL("%s") " node type which is used by %zu nodes", plugin_name(vt), list_length(&vt->instances));
 	{ INDENT
-		ret = vt->init ? vt->init(argc, argv, cfg) : 0;
+		ret = vt->init ? vt->init(sn) : 0;
 	}	
 
 	if (ret == 0)
