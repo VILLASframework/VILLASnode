@@ -164,7 +164,6 @@ int hook_cmp_priority(const void *a, const void *b)
 
 int hook_parse_list(struct list *list, config_setting_t *cfg, struct path *o)
 {
-	struct hook h;
 	struct plugin *p;
 
 	int ret, priority = 10;
@@ -183,6 +182,8 @@ int hook_parse_list(struct list *list, config_setting_t *cfg, struct path *o)
 		
 		if (!config_setting_is_group(cfg_hook))
 			cerror(cfg_hook, "The 'hooks' setting must be an array of strings.");
+	
+		struct hook h = { .state = STATE_DESTROYED };
 	
 		ret = hook_init(&h, &p->hook, o);
 		if (ret)
