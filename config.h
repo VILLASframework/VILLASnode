@@ -28,7 +28,7 @@
 #pragma once
 
 /** Default number of values in a sample */
-#define DEFAULT_VALUES		64
+#define DEFAULT_SAMPLELEN	64
 #define DEFAULT_QUEUELEN	1024
 
 /** Number of hugepages which are requested from the the kernel.
@@ -47,7 +47,7 @@
 
 #define USER_AGENT		"VILLASnode (" BUILDID ")"
 
-/*ID Required kernel version */
+/* Required kernel version */
 #define KERNEL_VERSION_MAJ	3
 #define KERNEL_VERSION_MIN	6
 
