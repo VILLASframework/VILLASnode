@@ -1,4 +1,3 @@
-#pragma once
 /** JSON serializtion of various objects.
  *
  * @author Steffen Vogel <stvogel@eonerc.rwth-aachen.de>
@@ -22,7 +21,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 
-#ifdef WITH_JANSSON
+#pragma once
 
 #include <jansson.h>
 #include <libconfig.h>
@@ -41,4 +40,3 @@ int sample_io_json_unpack(json_t *j, struct sample *s, int *flags);
 int sample_io_json_fprint(FILE *f, struct sample *s, int flags);
 
 int sample_io_json_fscan(FILE *f, struct sample *s, int *flags);
-#endif

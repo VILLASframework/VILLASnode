@@ -1,4 +1,3 @@
-#include "crypt.h"
 /** Crypto helpers.
  *
  * @author Steffen Vogel <stvogel@eonerc.rwth-aachen.de>
@@ -22,7 +21,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 
-#include <openssl/sha.h>
+#include "crypt.h"
 
 int sha1sum(FILE *f, unsigned char *sha1)
 {

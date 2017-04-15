@@ -27,7 +27,7 @@
 
 #include <curl/curl.h>
 
-#include "utils.h"
+#include "crypt.h"
 
 struct advio {
 	CURL *curl;
