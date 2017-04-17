@@ -24,15 +24,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 
-#include "config.h"
-#include "log.h"
-#include "node.h"
-#include "nodes/shmem.h"
-#include "pool.h"
-#include "queue_signalled.h"
-#include "sample.h"
-#include "shmem.h"
-#include "utils.h"
+#include <villas/log.h>
+#include <villas/node.h>
+#include <villas/nodes/shmem.h>
+#include <villas/pool.h>
+#include <villas/sample.h>
+#include <villas/shmem.h>
+#include <villas/utils.h>
 
 #include <string.h>
 
