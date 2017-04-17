@@ -34,6 +34,7 @@
 
 /* Forward declarations */
 struct node;
+struct super_node;
 struct sample;
 
 /** C++ like vtable construct for node_types */
@@ -49,13 +50,10 @@ struct node_type {
 	 *
 	 * This callback is invoked once per node-type.
 	 *
-	 * @param argc	Number of arguments passed to the server executable (see main()).
-	 * @param argv	Array of arguments  passed to the server executable (see main()).
-	 * @param cfg	Root libconfig object of global configuration file.
 	 * @retval 0	Success. Everything went well.
 	 * @retval <0	Error. Something went wrong.
 	 */
-	int (*init)(int argc, char *argv[], config_setting_t *cfg);
+	int (*init)(struct super_node *sn);
 
 	/** Global de-initialization per node type.
 	 *
@@ -152,7 +150,7 @@ struct node_type {
  *
  * @see node_type::init
  */
-int node_type_start(struct node_type *vt, int argc, char *argv[], config_setting_t *cfg);
+int node_type_start(struct node_type *vt, struct super_node *sn);
 
 /** De-initialize node type subsystems.
  *

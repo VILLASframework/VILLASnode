@@ -24,6 +24,9 @@
 
 #pragma once
 
+#include <libconfig.h>
+#include <pthread.h>
+
 #include "common.h"
 
 /* Forward declarations */
@@ -41,6 +44,8 @@ struct web {
 	const char *htdocs;		/**< The root directory for files served via HTTP. */
 	const char *ssl_cert;		/**< Path to the SSL certitifcate for HTTPS / WSS. */
 	const char *ssl_private_key;	/**< Path to the SSL private key for HTTPS / WSS. */
+	
+	pthread_t thread;
 };
 
 /** Initialize the web interface.
@@ -57,6 +62,3 @@ int web_stop(struct web *w);
 
 /** Parse HTTPd and WebSocket related options */
 int web_parse(struct web *w, config_setting_t *lcs);
-
-/** libwebsockets service routine. Call periodically */
-int web_service(struct web *w);

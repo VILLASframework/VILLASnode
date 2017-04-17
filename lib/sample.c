@@ -21,8 +21,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 
+#include <string.h>
+
 #include "pool.h"
 #include "sample.h"
+#include "utils.h"
 
 int sample_alloc(struct pool *p, struct sample *smps[], int cnt)
 {
@@ -36,6 +39,7 @@ int sample_alloc(struct pool *p, struct sample *smps[], int cnt)
 		smps[i]->capacity = (p->blocksz - sizeof(**smps)) / sizeof(smps[0]->data[0]);
 		smps[i]->pool_off = (char *) p - (char *) smps[i];
 		smps[i]->format = 0; /* all sample values are float by default */
+		smps[i]->refcnt = ATOMIC_VAR_INIT(1);
 	}
 
 	return ret;
@@ -47,6 +51,26 @@ void sample_free(struct sample *smps[], int cnt)
 		struct pool *p = (struct pool *) ((char *) smps[i] + smps[i]->pool_off);
 		pool_put(p, smps[i]);
 	}
+}
+
+int sample_put_many(struct sample *smps[], int cnt)
+{
+	int released = 0;
+	
+	for (int i = 0; i < cnt; i++) {
+		if (sample_put(smps[i]) == 0)
+			released++;
+	}
+	
+	return released;
+}
+
+int sample_get_many(struct sample *smps[], int cnt)
+{
+	for (int i = 0; i < cnt; i++)
+		sample_get(smps[i]);
+	
+	return cnt;
 }
 
 int sample_get(struct sample *s)
@@ -65,6 +89,31 @@ int sample_put(struct sample *s)
 	}
 	
 	return prev - 1;
+}
+
+int sample_copy(struct sample *dst, struct sample *src)
+{
+	dst->length = MIN(src->length, dst->capacity);
+
+	dst->sequence = src->sequence;
+	dst->format = src->format;
+	dst->source = src->source;
+	
+	dst->ts.origin   = src->ts.origin;
+	dst->ts.received = src->ts.received;
+	dst->ts.sent     = src->ts.sent;
+
+	memcpy(&dst->data, &src->data, SAMPLE_DATA_LEN(dst->length));
+	
+	return 0;
+}
+
+int sample_copy_many(struct sample *dsts[], struct sample *srcs[], int cnt)
+{
+	for (int i = 0; i < cnt; i++)
+		sample_copy(dsts[i], srcs[i]);
+	
+	return cnt;
 }
 
 int sample_set_data_format(struct sample *s, int idx, enum sample_data_format fmt)
