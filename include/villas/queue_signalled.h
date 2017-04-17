@@ -1,6 +1,7 @@
-/** libcurl based advanced IO aka ADVIO.
+/** Wrapper around queue that uses POSIX CV's for signalling writes.
  *
- * @author Steffen Vogel <stvogel@eonerc.rwth-aachen.de>
+ * @file
+ * @author Georg Martin Reinke <georg.reinke@rwth-aachen.de>
  * @copyright 2017, Institute for Automation of Complex Power Systems, EONERC
  * @license GNU Lesser General Public License v2.1
  *
@@ -23,39 +24,27 @@
 
 #pragma once
 
-#include <stdio.h>
+#include <pthread.h>
 
-#include <curl/curl.h>
+#include "queue.h"
 
-#include "crypt.h"
-
-struct advio {
-	CURL *curl;
-	FILE *file;
-	
-	unsigned char hash[SHA_DIGEST_LENGTH];
-
-	char mode[2];
-	char *uri;
+/** Wrapper around queue that uses POSIX CV's for signalling writes. */
+struct queue_signalled {
+	struct queue queue;		/**< Actual underlying queue. */
+	pthread_cond_t ready;		/**< Condition variable to signal writes to the queue. */
+	pthread_mutex_t mutex;		/**< Mutex for ready. */
 };
 
-typedef struct advio AFILE;
+#define queue_signalled_available(q) queue_available(&((q)->queue))
 
-/* The remaining functions from stdio are just replaced macros */
-#define afeof(af)			feof((af)->file)
-#define aftell(af)			ftell((af)->file)
-#define arewind(af)			rewind((af)->file)
-#define afileno(af)			fileno((af)->file)
-#define afread(ptr, sz, nitems, af)	fread(ptr, sz, nitems, (af)->file)
-#define afwrite(ptr, sz, nitems, af)	fwrite(ptr, sz, nitems, (af)->file)
+int queue_signalled_init(struct queue_signalled *qs, size_t size, struct memtype *mem);
 
-/* Extensions */
-#define auri(af)			((af)->uri)
-#define ahash(af)			((af)->hash)
+int queue_signalled_destroy(struct queue_signalled *qs);
 
-AFILE *afopen(const char *url, const char *mode);
+int queue_signalled_push(struct queue_signalled *qs, void *ptr);
 
-int afclose(AFILE *file);
-int afflush(AFILE *file);
-int adownload(AFILE *af);
-int aupload(AFILE *af);
+int queue_signalled_pull(struct queue_signalled *qs, void **ptr);
+
+int queue_signalled_push_many(struct queue_signalled *qs, void *ptr[], size_t cnt);
+
+int queue_signalled_pull_many(struct queue_signalled *qs, void *ptr[], size_t cnt);

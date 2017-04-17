@@ -1,4 +1,4 @@
-/** The "config" API ressource.
+/** Crypto helpers.
  *
  * @author Steffen Vogel <stvogel@eonerc.rwth-aachen.de>
  * @copyright 2017, Institute for Automation of Complex Power Systems, EONERC
@@ -21,27 +21,30 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 
-#include <libconfig.h>
+#include "crypt.h"
 
-#include "api.h"
-#include "utils.h"
-#include "plugin.h"
-#include "json.h"
-
-static int api_config(struct api_action *h, json_t *args, json_t **resp, struct api_session *s)
+int sha1sum(FILE *f, unsigned char *sha1)
 {
-	config_setting_t *cfg_root = config_root_setting(&s->api->super_node->cfg);
+	SHA_CTX c;
+	char buf[512];
+	ssize_t bytes;
+	long seek;
 	
-	*resp = cfg_root ? config_to_json(cfg_root) : json_object();
+	seek = ftell(f);
+	fseek(f, 0, SEEK_SET);
+
+	SHA1_Init(&c);
+
+	bytes = fread(buf, 1, 512, f);
+	while (bytes > 0) {
+		SHA1_Update(&c, buf, bytes);
+		bytes = fread(buf, 1, 512, f);
+	}
+
+	SHA1_Final(sha1, &c);
 	
+	fseek(f, seek, SEEK_SET);
+
 	return 0;
 }
 
-static struct plugin p = {
-	.name = "config",
-	.description = "retrieve current VILLASnode configuration",
-	.type = PLUGIN_TYPE_API,
-	.api.cb = api_config
-};
-
-REGISTER_PLUGIN(&p)

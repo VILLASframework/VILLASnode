@@ -1,4 +1,4 @@
-/** The "config" API ressource.
+/** JSON serializtion of various objects.
  *
  * @author Steffen Vogel <stvogel@eonerc.rwth-aachen.de>
  * @copyright 2017, Institute for Automation of Complex Power Systems, EONERC
@@ -21,27 +21,22 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 
+#pragma once
+
+#include <jansson.h>
 #include <libconfig.h>
 
-#include "api.h"
-#include "utils.h"
-#include "plugin.h"
-#include "json.h"
+#include "sample.h"
 
-static int api_config(struct api_action *h, json_t *args, json_t **resp, struct api_session *s)
-{
-	config_setting_t *cfg_root = config_root_setting(&s->api->super_node->cfg);
-	
-	*resp = cfg_root ? config_to_json(cfg_root) : json_object();
-	
-	return 0;
-}
+/* Convert a libconfig object to a libjansson object */
+json_t * config_to_json(config_setting_t *cfg);
 
-static struct plugin p = {
-	.name = "config",
-	.description = "retrieve current VILLASnode configuration",
-	.type = PLUGIN_TYPE_API,
-	.api.cb = api_config
-};
+int json_to_config(json_t *json, config_setting_t *parent);
 
-REGISTER_PLUGIN(&p)
+int sample_io_json_pack(json_t **j, struct sample *s, int flags);
+
+int sample_io_json_unpack(json_t *j, struct sample *s, int *flags);
+
+int sample_io_json_fprint(FILE *f, struct sample *s, int flags);
+
+int sample_io_json_fscan(FILE *f, struct sample *s, int *flags);

@@ -1,4 +1,4 @@
-/** The "config" API ressource.
+/** Crypto helpers.
  *
  * @author Steffen Vogel <stvogel@eonerc.rwth-aachen.de>
  * @copyright 2017, Institute for Automation of Complex Power Systems, EONERC
@@ -21,27 +21,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 
-#include <libconfig.h>
+#pragma once
 
-#include "api.h"
-#include "utils.h"
-#include "plugin.h"
-#include "json.h"
+#include <stdio.h>
+#include <openssl/sha.h>
 
-static int api_config(struct api_action *h, json_t *args, json_t **resp, struct api_session *s)
-{
-	config_setting_t *cfg_root = config_root_setting(&s->api->super_node->cfg);
-	
-	*resp = cfg_root ? config_to_json(cfg_root) : json_object();
-	
-	return 0;
-}
-
-static struct plugin p = {
-	.name = "config",
-	.description = "retrieve current VILLASnode configuration",
-	.type = PLUGIN_TYPE_API,
-	.api.cb = api_config
-};
-
-REGISTER_PLUGIN(&p)
+/** Calculate SHA1 hash of complete file \p f and place it into \p sha1.
+ * 
+ * @param sha1[out] Must be SHA_DIGEST_LENGTH (20) in size.
+ * @retval 0 Everything was okay.
+ */
+int sha1sum(FILE *f, unsigned char *sha1);
