@@ -40,6 +40,15 @@
  */
 void msg_swap(struct msg *m);
 
+/** Clone of msg_swap function but for fake_header.
+ *
+ * The fake header only contains the sequence, 
+ * timestamp and data values. Swaping of data 
+ * values takes into account the value of 
+ * TOT_VALS_FROM_GTSKT constant.
+ */
+void msg_fake_swap(struct GTSKT_msg *m);
+
 /** Check the consistency of a message.
  *
  * The functions checks the header fields of a message.

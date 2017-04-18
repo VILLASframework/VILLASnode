@@ -44,6 +44,16 @@ void msg_swap(struct msg *m)
 	m->endian ^= 1;
 }
 
+void msg_fake_swap(struct GTSKT_msg *m)
+{
+	m->sequence = bswap_32(m->sequence);
+	m->ts.sec   = bswap_32(m->ts.sec);
+	m->ts.nsec  = bswap_32(m->ts.nsec);
+	
+	for (int i = 0; i < TOT_VALS_FROM_GTSKT; i++)
+		m->data[i].i = bswap_32(m->data[i].i);
+}
+
 int msg_verify(struct msg *m)
 {
 	if      (m->version != MSG_VERSION)

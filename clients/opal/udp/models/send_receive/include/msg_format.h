@@ -59,14 +59,15 @@
 #endif
 
 /** The total length of a message */
-#define MSG_LEN(msg)		(4 * ((msg)->length + 4))
+#define MSG_LEN(msg)		(4 * ((msg)->length + 4))		/* @todo recheck this logic */
+#define GTSKT_MSG_LEN(msg)		(4 * (TOT_VALS_TO_GTSKT + 3))
 
 #define MSG_TS(msg) (struct timespec) {	\
 	.tv_sec  = (msg)->ts.sec,	\
 	.tv_nsec = (msg)->ts.nsec	\
 }
 
-/** Initialize a message */
+/** Initialize a VILLASnode message */
 #define MSG_INIT(i) (struct msg) {	\
 	.version = MSG_VERSION,		\
 	.type = MSG_TYPE_DATA,		\
@@ -74,6 +75,13 @@
 	.length = i,			\
 	.sequence = 0,			\
 	.rsvd1 = 0, .rsvd2 = 0		\
+}
+
+/** Initialize a GTSKT message */
+#define GTSKT_MSG_INIT(i) (struct GTSKT_msg) {	\
+	.sequence = 0,		\
+	.ts.sec = 0,		\
+	.ts.nsec = 0	\
 }
 
 /** This message format is used by all clients
@@ -108,6 +116,22 @@ struct msg
 	union {
 		float    f;	/**< Floating point values (note msg::endian) */
 		uint32_t i;	/**< Integer values (note msg::endian) */
+	} data[MSG_VALUES];
+} __attribute__((aligned(64), packed));
+
+struct GTSKT_msg
+{
+	int32_t sequence;
+	
+	/** A timestamp per message */
+	struct {
+		uint32_t sec;	/**< Seconds     since 1970-01-01 00:00:00 */
+		uint32_t nsec;	/**< Nanoseconds of the current second. */
+	} ts;
+	
+	union {
+		float   f;	/**< Floating point values*/
+		uint32_t i;	/**< Integer values*/	/** @todo what if data sent is signed */
 	} data[MSG_VALUES];
 } __attribute__((aligned(64), packed));
 

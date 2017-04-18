@@ -31,7 +31,6 @@
   #include <sys/dcmd_chr.h>
 #elif defined(__linux__)
   #define _GNU_SOURCE   1
-  #include <time.h>
 #endif
 
 /* Define RTLAB before including OpalPrint.h for messages to be sent
@@ -80,15 +79,23 @@ static void *SendToIPPort(void *arg)
 	unsigned int SendID = 1;
 	unsigned int ModelState;
 	unsigned int i, n;
+    unsigned int msg_len = 0;
 	int nbSend = 0;
 	uint32_t seq = 0;
 
 	/* Data from OPAL-RT model */
 	double mdldata[MSG_VALUES];
 	int mdldata_size;
+	int send_data_size = 0;
 
+#if DATA_SOURCE == DATA_FROM_VILLAS
 	/* Data from VILLASnode */
 	struct msg msg = MSG_INIT(0);
+#else
+	/* Data from GTNET_SKT card */
+	//recv_msg_size = TOT_VALS_FROM_GTSKT;	/** Num of values sent from GTSKT is static and has to be set in each draft file. */
+	struct GTSKT_msg msg = GTSKT_MSG_INIT(0);
+#endif
 
 #ifdef _DEBUG // TODO: workaround
 	msg_send = &msg;
@@ -124,6 +131,14 @@ static void *SendToIPPort(void *arg)
 				PROGNAME, SendID, MSG_VALUES);
 			return NULL;
 		}
+		
+#if DATA_SOURCE == DATA_FROM_GTSKT
+		if (mdldata_size / sizeof(double) > TOT_VALS_TO_GTSKT) {
+			OpalPrint("%s: Number of signals for SendID=%d exceeds allowed maximum for GTSKT (%d)\n",
+				PROGNAME, SendID, TOT_VALS_TO_GTSKT);
+			return NULL;
+		}
+#endif
 
 		/* Read data from the model */
 		OpalGetAsyncSendIconData(mdldata, mdldata_size, SendID);
@@ -131,17 +146,26 @@ static void *SendToIPPort(void *arg)
 		/* Get current time */
 		struct timespec now;
 		clock_gettime(CLOCK_REALTIME, &now);
-
-		msg.length = mdldata_size / sizeof(double);
-		for (i = 0; i < msg.length; i++)
-			msg.data[i].f = (float) mdldata[i];
-
-		msg.sequence = seq++;
+		
+		msg.sequence = seq++;		/** @todo see if loopback of timestamp is needed or not. Maybe create another c file */
 		msg.ts.sec = now.tv_sec;
 		msg.ts.nsec = now.tv_nsec;
 
+		send_data_size = mdldata_size / sizeof(double);
+
+#if DATA_SOURCE == DATA_FROM_VILLAS
+		msg.length = send_data_size;
+#endif
+		for (i = 0; i < send_data_size; i++)
+			msg.data[i].f = (float) mdldata[i];
+			
+#if DATA_SOURCE == DATA_FROM_VILLAS
+		msg_len = MSG_LEN(&msg);
+#else
+		msg_len = GTSKT_MSG_LEN(&msg);
+#endif
 		/* Perform the actual write to the ip port */
-		if (SendPacket((char *) &msg, MSG_LEN(&msg)) < 0)
+		if (SendPacket((char *) &msg, msg_len) < 0)
 			OpalSetAsyncSendIconError(errno, SendID);
 		else
 			OpalSetAsyncSendIconError(0, SendID);
@@ -174,10 +198,16 @@ static void *RecvFromIPPort(void *arg)
 	/* Data from OPAL-RT model */
 	double mdldata[MSG_VALUES];
 	int mdldata_size;
+	int recv_msg_size;
 
+#if DATA_SOURCE == DATA_FROM_VILLAS
 	/* Data from VILLASnode */
 	struct msg msg = MSG_INIT(0);
-
+#else
+	/* Data from GTNET_SKT card */
+	recv_msg_size = TOT_VALS_FROM_GTSKT;	/** Num of values sent from GTSKT is static and has to be set in each draft file. */
+	struct GTSKT_msg msg = GTSKT_MSG_INIT(0);
+#endif
 	OpalPrint("%s: RecvFromIPPort thread started\n", PROGNAME);
 
 	OpalGetNbAsyncRecvIcon(&nbRecv);
@@ -202,6 +232,8 @@ static void *RecvFromIPPort(void *arg)
 			break;
 		}
 
+#if DATA_SOURCE == DATA_FROM_VILLAS
+		recv_msg_size = msg.length;
 		/* Check message contents */
 		if (msg.version != MSG_VERSION) {
 			OpalPrint("%s: Received message with unknown version. Skipping..\n", PROGNAME);
@@ -213,15 +245,17 @@ static void *RecvFromIPPort(void *arg)
 			continue;
 		}
 		
-		/* Convert message to host endianess */
-		if (msg.endian != MSG_ENDIAN_HOST)
-			msg_swap(&msg);
-		
 		if (n != MSG_LEN(&msg)) {
 			OpalPrint("%s: Received incoherent packet (size: %d, complete: %d)\n", PROGNAME, n, MSG_LEN(&msg));
 			continue;
 		}
-
+		
+		/* Convert message to host endianess */
+		if (msg.endian != MSG_ENDIAN_HOST)
+            msg_swap(&msg);
+#elif DATA_SOURCE == DATA_FROM_GTSKT
+			msg_fake_swap(&msg); /* Always swap if data is from GTSKT */ /** @todo consider the fact that data on network is always big endian */
+#endif
 		/* Update OPAL model */
 		OpalSetAsyncRecvIconStatus(msg.sequence, RecvID);	/* Set the Status to the message ID */
 		OpalSetAsyncRecvIconError(0, RecvID);			/* Set the Error to 0 */
@@ -234,11 +268,11 @@ static void *RecvFromIPPort(void *arg)
 			return NULL;
 		}
 
-		if (mdldata_size / sizeof(double) > msg.length)
+		if (mdldata_size / sizeof(double) > recv_msg_size)
 			OpalPrint("%s: Number of signals for RecvID=%d (%d) exceeds what was received (%d)\n",
-				PROGNAME, RecvID, mdldata_size / sizeof(double), msg.length);
+				PROGNAME, RecvID, mdldata_size / sizeof(double), recv_msg_size);
 
-		for (i = 0; i < msg.length; i++)
+		for (i = 0; i < recv_msg_size; i++)
 			mdldata[i] = (double) msg.data[i].f;
 
 		OpalSetAsyncRecvIconData(mdldata, mdldata_size, RecvID);
