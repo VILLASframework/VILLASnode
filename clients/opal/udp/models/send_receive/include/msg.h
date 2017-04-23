@@ -1,4 +1,4 @@
-/** Message related functions.
+/** Message related functions
  *
  * @file
  * @author Steffen Vogel <stvogel@eonerc.rwth-aachen.de>
@@ -22,23 +22,24 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA 
  *********************************************************************************/
 
-#ifndef _MSG_H_
-#define _MSG_H_
+#pragma once
 
-#include "msg_format.h"
+/* Forward declarations. */
+struct msg;
 
-/** Swaps message contents byte-order.
+/** Swaps the byte-order of the message.
  *
- * Message can either be transmitted in little or big endian
- * format. The actual endianess for a message is defined by the
- * msg::endian field. This covers msg::length, msg::sequence, msg::data and msg::ts fields.
- * Received message are usally converted to the endianess of the host.
- * This is required for further sanity checks of the sequence number
- * or parsing of the data.
+ * Message are always transmitted in network (big endian) byte order.
  *
  * @param m A pointer to the message
  */
-void msg_swap(struct msg *m);
+void msg_hdr_ntoh(struct msg *m);
+
+void msg_hdr_hton(struct msg *m);
+
+void msg_ntoh(struct msg *m);
+
+void msg_hton(struct msg *m);
 
 /** Check the consistency of a message.
  *
@@ -49,6 +50,3 @@ void msg_swap(struct msg *m);
  * @retval <0 The message header is invalid.
  */
 int msg_verify(struct msg *m);
-
-#endif /* _MSG_H_ */
-
