@@ -33,8 +33,7 @@ FROM fedora:latest
 MAINTAINER Steffen Vogel <stvogel@eonerc.rwth-aachen.de>
 
 # Toolchain
-RUN dnf -y update && \
-    dnf -y install \
+RUN dnf -y install \
 	gcc gcc-c++ \
 	pkgconfig make cmake \
 	autoconf automake autogen libtool \
@@ -42,8 +41,7 @@ RUN dnf -y update && \
 	texinfo git
 
 # Dependencies
-RUN dnf -y update && \
-    dnf -y install \
+RUN dnf -y install \
 	openssl openssl-devel \
 	libconfig-devel \
 	libnl3-devel \
@@ -51,8 +49,7 @@ RUN dnf -y update && \
 	jansson-devel
 
 # Several tools only needed for developement and testing
-RUN dnf -y update && \
-    dnf -y install \
+RUN dnf -y install \
 	doxygen dia graphviz \
 	openssh-clients \
 	rpmdevtools rpm-build \
@@ -61,6 +58,12 @@ RUN dnf -y update && \
 	python-pip \
 	valgrind \
 	gdb
+
+# 32bit versions of some standard libraries for RT-LAB code
+RUN dnf -y install \
+	libstdc++-devel.i686 \
+	libuuid-devel.i686 \
+	glibc-devel.i686
 
 # Tools for debugging, coverage, profiling
 RUN pip install \
