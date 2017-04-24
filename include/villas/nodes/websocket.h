@@ -68,6 +68,11 @@ struct websocket_connection {
 		char ip[64];
 	} peer;
 	
+	enum {
+		WEBSOCKET_MODE_CLIENT,
+		WEBSOCKET_MODE_SERVER,
+	} mode;
+	
 	enum state state;
 	
 	char *_name;
