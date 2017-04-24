@@ -1,9 +1,9 @@
-/** Configure Scheduler
+/** Compatibility code for GCC
+ *
+ * OPAL-RT's libSystem.a links against some Intel
  *
  * @file
  * @author Steffen Vogel <stvogel@eonerc.rwth-aachen.de>
- * @author Mathieu Dubé-Dallaire
- * @copyright 2003, OPAL-RT Technologies inc
  * @copyright 2017, Institute for Automation of Complex Power Systems, EONERC
  * @license GNU Lesser General Public License v2.1
  *
@@ -24,11 +24,24 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA 
  *********************************************************************************/
 
-#ifndef _UTILS_H_
-#define _UTILS_H_
+#include <string.h>
 
-#define EOK	0
+size_t __intel_sse2_strlen(const char *s)
+{
+	return strlen(s);
+}
 
-int AssignProcToCpu0(void);
+void * _intel_fast_memset(void *b, int c, size_t len)
+{
+	return memset(b, c, len);
+}
 
-#endif /* _UTILS_H_ */
+void * _intel_fast_memcpy(void *restrict dst, const void *restrict src, size_t n)
+{
+	return memcpy(dst, src, n);
+}
+
+int _intel_fast_memcmp(const void *s1, const void *s2, size_t n)
+{
+	return memcmp(s1, s2, n);
+}

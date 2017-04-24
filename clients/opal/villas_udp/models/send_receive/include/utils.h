@@ -1,7 +1,9 @@
-/** Message related functions
+/** Configure scheduler.
  *
  * @file
  * @author Steffen Vogel <stvogel@eonerc.rwth-aachen.de>
+ * @author Mathieu Dubé-Dallaire
+ * @copyright 2003, OPAL-RT Technologies inc
  * @copyright 2017, Institute for Automation of Complex Power Systems, EONERC
  * @license GNU Lesser General Public License v2.1
  *
@@ -22,31 +24,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA 
  *********************************************************************************/
 
-#pragma once
+#ifndef _UTILS_H_
+#define _UTILS_H_
 
-/* Forward declarations. */
-struct msg;
+int AssignProcToCpu0(void);
 
-/** Swaps the byte-order of the message.
- *
- * Message are always transmitted in network (big endian) byte order.
- *
- * @param m A pointer to the message
- */
-void msg_hdr_ntoh(struct msg *m);
-
-void msg_hdr_hton(struct msg *m);
-
-void msg_ntoh(struct msg *m);
-
-void msg_hton(struct msg *m);
-
-/** Check the consistency of a message.
- *
- * The functions checks the header fields of a message.
- *
- * @param m A pointer to the message
- * @retval 0 The message header is valid.
- * @retval <0 The message header is invalid.
- */
-int msg_verify(struct msg *m);
+#endif /* _UTILS_H_ */

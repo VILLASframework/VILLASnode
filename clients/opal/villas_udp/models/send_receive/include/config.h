@@ -1,4 +1,4 @@
-/** Message related functions
+/** Compile-time configuration.
  *
  * @file
  * @author Steffen Vogel <stvogel@eonerc.rwth-aachen.de>
@@ -21,32 +21,22 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA 
  *********************************************************************************/
+ 
+#ifndef _CONFIG_H_
+#define _CONFIG_H_
 
-#pragma once
+#define PROGNAME	"VILLASnode-OPAL-UDP"
+#define VERSION		"0.6"
 
-/* Forward declarations. */
-struct msg;
+#define MAX_VALUES	64
 
-/** Swaps the byte-order of the message.
- *
- * Message are always transmitted in network (big endian) byte order.
- *
- * @param m A pointer to the message
- */
-void msg_hdr_ntoh(struct msg *m);
+/* List of protocols */
+#define VILLAS		1
+#define GTNET_SKT	2
 
-void msg_hdr_hton(struct msg *m);
+/* Default protocol */
+#ifndef PROTOCOL
+  #define PROTOCOL VILLAS
+#endif
 
-void msg_ntoh(struct msg *m);
-
-void msg_hton(struct msg *m);
-
-/** Check the consistency of a message.
- *
- * The functions checks the header fields of a message.
- *
- * @param m A pointer to the message
- * @retval 0 The message header is valid.
- * @retval <0 The message header is invalid.
- */
-int msg_verify(struct msg *m);
+#endif /* _CONFIG_H_ */

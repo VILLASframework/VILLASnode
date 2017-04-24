@@ -1,4 +1,4 @@
-/** Message related functions
+/** Helper functions for sockets.
  *
  * @file
  * @author Steffen Vogel <stvogel@eonerc.rwth-aachen.de>
@@ -22,31 +22,29 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA 
  *********************************************************************************/
 
-#pragma once
+#ifndef _SOCKET_H_
+#define _SOCKET_H_
 
-/* Forward declarations. */
-struct msg;
+#include <netinet/in.h>
 
-/** Swaps the byte-order of the message.
- *
- * Message are always transmitted in network (big endian) byte order.
- *
- * @param m A pointer to the message
- */
-void msg_hdr_ntoh(struct msg *m);
+#define RT
+#include "OpalGenAsyncParamCtrl.h"
 
-void msg_hdr_hton(struct msg *m);
+#define UDP_PROTOCOL	1
+#define TCP_PROTOCOL	2
 
-void msg_ntoh(struct msg *m);
+struct socket {
+	struct sockaddr_in send_ad;	/* Send address */
+	struct sockaddr_in recv_ad;	/* Receive address */
+	int sd;				/* socket descriptor */
+};
 
-void msg_hton(struct msg *m);
+int socket_init(struct socket *s, Opal_GenAsyncParam_Ctrl IconCtrlStruct);
 
-/** Check the consistency of a message.
- *
- * The functions checks the header fields of a message.
- *
- * @param m A pointer to the message
- * @retval 0 The message header is valid.
- * @retval <0 The message header is invalid.
- */
-int msg_verify(struct msg *m);
+int socket_send(struct socket *s, char *data, int len);
+
+int socket_recv(struct socket *s, char *data, int len, double timeout);
+
+int socket_close(struct socket *s, Opal_GenAsyncParam_Ctrl IconCtrlStruct);
+
+#endif /* _SOCKET_H_ */
