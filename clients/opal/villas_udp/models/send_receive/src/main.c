@@ -129,8 +129,11 @@ static void * SendToIPPort(void *arg)
 		
 		len = MSG_LEN(msg->length);
 #elif PROTOCOL == GTNET_SKT
-		for (int i = 0; i < cnt; i++)
+        uint32_t *imsg = (uint32_t *) msg;
+		for (int i = 0; i < cnt; i++) {
 			msg[i] = (float) mdldata[i];
+            imsg[i] = htonl(imsg[i]);
+        }
 		
 		len = mdldata_size / sizeof(double) * sizeof(float);
 #else
@@ -216,7 +219,7 @@ static void * RecvFromIPPort(void *arg)
 
 #if PROTOCOL == VILLAS
 		msg_ntoh(msg);
-		
+
 		ret = msg_verify(msg);
 		if (ret) {
 			OpalPrint("%s: Skipping invalid packet\n", PROGNAME);
@@ -234,6 +237,10 @@ static void * RecvFromIPPort(void *arg)
 		/* Update OPAL model */
 		OpalSetAsyncRecvIconStatus(msg->sequence, RecvID);	/* Set the Status to the message ID */
 #elif PROTOCOL == GTNET_SKT
+        uint32_t *imsg = (uint32_t *) msg;
+        for (int i = 0; i < cnt; i++)
+            imsg[i] = ntohl(imsg[i]);
+			
 		for (int i = 0; i < cnt; i++)
 			mdldata[i] = (double) msg[i];
 #else
