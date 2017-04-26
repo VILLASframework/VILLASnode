@@ -30,6 +30,10 @@
 
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "pool.h"
 #include "queue.h"
 #include "queue_signalled.h"
@@ -97,3 +101,7 @@ int shmem_shared_write(struct shmem_shared *shm, struct sample *smps[], unsigned
 size_t shmem_total_size(int insize, int outsize, int sample_size);
 
 /** @} */
+
+#ifdef __cplusplus
+}
+#endif

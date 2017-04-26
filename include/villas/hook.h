@@ -39,6 +39,7 @@
 #include <string.h>
 #include <stdbool.h>
 
+#include "log_config.h"
 #include "queue.h"
 #include "list.h"
 #include "super_node.h"

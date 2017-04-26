@@ -24,10 +24,15 @@
 
 #pragma once
 
+#include "atomic.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
-#include <stdatomic.h>
 #include <time.h>
 #include <sys/types.h>
 
@@ -98,3 +103,7 @@ int sample_get_data_format(struct sample *s, int idx);
 
 /** Set number representation for a single value of a sample. */
 int sample_set_data_format(struct sample *s, int idx, enum sample_data_format fmt);
+
+#ifdef __cplusplus
+}
+#endif
