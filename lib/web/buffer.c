@@ -22,6 +22,7 @@
  *********************************************************************************/
 
 #include <jansson.h>
+#include <string.h>
 
 #include "compat.h"
 #include "assert.h"

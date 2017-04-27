@@ -22,6 +22,7 @@
  *********************************************************************************/
 
 #include <libwebsockets.h>
+#include <string.h>
 
 #include "api.h"
 #include "log.h"
