@@ -175,7 +175,7 @@ deploy:packages:
 deploy:git-mirror:
   stage: deploy
   script:
-    - git push --force --mirror --prune https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com:VILLASframework/VILLASnode.git
+    - git push --force --mirror https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/VILLASframework/VILLASnode.git
 
 # Stage: docker
 ##############################################################################
